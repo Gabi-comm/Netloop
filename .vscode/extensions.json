@@ -1,8 +1,7 @@
 {
   "recommendations": [
-    "fwcd.kotlin",
-    "vscjava.vscode-gradle",
-    "redhat.vscode-xml",
-    "ms-python.python"
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "vunguyentuan.vscode-css-variables"
   ]
 }

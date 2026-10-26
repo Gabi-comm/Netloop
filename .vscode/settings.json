@@ -1,8 +1,9 @@
 {
   "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
   "files.exclude": {
-    "**/.gradle": true,
-    "**/build": true,
-    "**/.kotlin": true
+    "**/.next": true,
+    "**/node_modules": true
   }
 }

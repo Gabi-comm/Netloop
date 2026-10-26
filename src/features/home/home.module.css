@@ -1,0 +1,238 @@
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: clamp(4px, 2dvh, 16px);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(64px, 22vw, 92px);
+  line-height: 1;
+  letter-spacing: 5px;
+}
+
+.net {
+  color: var(--pink);
+}
+
+.tagline {
+  margin: 10px 0 0;
+  font-size: clamp(20px, 5.6vw, 24px);
+  color: var(--soft);
+  text-align: center;
+}
+
+.heroWrap {
+  flex: 1 1 auto;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero {
+  width: 100%;
+  max-width: 342px;
+  height: auto;
+  max-height: 32dvh;
+  overflow: visible;
+}
+
+.loop {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: draw 3.6s ease-in-out infinite;
+}
+
+@keyframes draw {
+  0% { stroke-dashoffset: 100; opacity: 1; }
+  45% { stroke-dashoffset: 0; opacity: 1; }
+  80% { stroke-dashoffset: 0; opacity: 1; }
+  92% { opacity: 0; }
+  100% { stroke-dashoffset: 100; opacity: 0; }
+}
+
+.wobble {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  animation: wobble 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes wobble {
+  from { transform: rotate(-6deg) scale(1); }
+  to { transform: rotate(6deg) scale(1.04, 0.96); }
+}
+
+.walk {
+  animation: walk 0.36s steps(2) infinite;
+}
+
+@keyframes walk {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+
+.bob {
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: eyes 4s infinite;
+}
+
+@keyframes eyes {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.chase {
+  animation: chase 1.2s ease-in-out infinite;
+}
+
+@keyframes chase {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.blink {
+  animation: chase 1.6s ease-in-out infinite;
+}
+
+.sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sparkle 2.4s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.8) rotate(20deg); opacity: 0.7; }
+}
+
+.playHint {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 20px;
+  color: var(--muted);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  position: relative;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 2.5px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--chalk);
+  font-size: 21px;
+  text-decoration: none;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.tile:hover {
+  color: var(--chalk);
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.tile:active {
+  transform: scale(0.96);
+}
+
+.badge {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--data);
+  color: var(--ground);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.daily {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2.5px dashed var(--points);
+  border-radius: var(--radius-md);
+}
+
+.dailyText {
+  display: flex;
+  flex-direction: column;
+}
+
+.dailyTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--points);
+  letter-spacing: 1px;
+}
+
+.dailySub {
+  font-size: 19px;
+  color: var(--muted);
+}
+
+.dailyButton {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--points);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 22px;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 36px;
+  letter-spacing: 2px;
+}
+

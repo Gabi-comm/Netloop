@@ -1,0 +1,82 @@
+:root {
+  --ground: #121212;
+  --surface: #1a1a19;
+  --line: #333330;
+  --line-strong: #4a4a46;
+  --cable: #2c2c2a;
+  --chalk: #f2f2ec;
+  --soft: #bdbdb5;
+  --muted: #9a9a92;
+  --pink: #e0567f;
+  --pink-hover: #f07a9c;
+  --pink-deep: #8f2a4c;
+  --threat: #e8553d;
+  --legit: #8ad15b;
+  --points: #ede06a;
+  --server: #3b6fd4;
+  --server-light: #6f8fe0;
+  --data: #5fd3e0;
+  --epic: #9b7ad6;
+  --epic-light: #b39af0;
+  --rare: #8aa8f0;
+
+  --radius-sm: 14px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --gutter: clamp(16px, 5vw, 28px);
+  --screen-max: 480px;
+
+  --font-display: var(--font-gochi), "Comic Sans MS", cursive;
+  --font-body: var(--font-patrick), "Comic Sans MS", cursive;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--ground);
+  color: var(--chalk);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+a {
+  color: var(--pink);
+}
+
+a:hover {
+  color: var(--pink-hover);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--points);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

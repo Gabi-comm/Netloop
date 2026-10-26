@@ -1,0 +1,181 @@
+.bit {
+  overflow: visible;
+}
+
+.bit * {
+  transform-box: view-box;
+}
+
+.shadow {
+  fill: #000;
+  opacity: 0.35;
+  transform-origin: 50px 94px;
+  animation: shadowSpread 700ms ease-in 1500ms forwards;
+}
+
+.legs,
+.stick {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: dimStroke 700ms ease-in 1500ms forwards;
+}
+
+.body {
+  transform-origin: 50px 80px;
+  animation:
+    shake 520ms linear,
+    slump 700ms cubic-bezier(0.5, 0, 0.75, 0) 1500ms forwards;
+}
+
+.antennaLeft {
+  transform-origin: 38px 22px;
+  animation: droopLeft 600ms ease-in 1650ms forwards;
+}
+
+.antennaRight {
+  transform-origin: 62px 21px;
+  animation: droopRight 600ms ease-in 1750ms forwards;
+}
+
+.led {
+  animation: flicker 900ms steps(1, end) 450ms forwards;
+}
+
+.ledPink {
+  fill: var(--pink);
+}
+
+.ledCyan {
+  fill: var(--data);
+  animation-delay: 600ms;
+}
+
+.shell {
+  fill: var(--chalk);
+  animation: dimFill 700ms ease-in 1500ms forwards;
+}
+
+.eyesOpen {
+  fill: var(--ground);
+  transform-origin: 51px 46px;
+  animation: blinkShut 220ms ease-in 1300ms forwards;
+}
+
+.eyesClosed,
+.frown,
+.flat {
+  fill: none;
+  stroke: var(--ground);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.eyesClosed,
+.flat {
+  opacity: 0;
+  animation: appear 120ms linear 1500ms forwards;
+}
+
+.frown {
+  animation: vanish 120ms linear 1500ms forwards;
+}
+
+.light {
+  fill: var(--threat);
+}
+
+.light2 {
+  fill: var(--line-strong);
+  animation: standby 2.4s ease-in-out 2600ms infinite;
+}
+
+.light1 {
+  animation: lightOff 1ms 700ms forwards;
+}
+
+.light3 {
+  animation: lightOff 1ms 900ms forwards;
+}
+
+.scan {
+  fill: var(--chalk);
+  opacity: 0;
+  animation: glitch 900ms steps(1, end) 450ms;
+}
+
+@keyframes shake {
+  0%, 100% { transform: none; }
+  15% { transform: translateX(-4px) rotate(-3deg); }
+  30% { transform: translateX(4px) rotate(3deg); }
+  45% { transform: translateX(-3px) rotate(-2deg); }
+  60% { transform: translateX(3px) rotate(2deg); }
+  80% { transform: translateX(-1px); }
+}
+
+@keyframes slump {
+  to { transform: translateY(7px) rotate(-9deg) scaleY(0.94); }
+}
+
+@keyframes droopLeft {
+  to { transform: rotate(-58deg); }
+}
+
+@keyframes droopRight {
+  to { transform: rotate(62deg); }
+}
+
+@keyframes flicker {
+  0% { opacity: 0.15; }
+  12% { opacity: 1; }
+  24% { opacity: 0.1; }
+  36% { opacity: 0.9; }
+  52% { opacity: 0.1; }
+  64% { opacity: 0.6; }
+  80% { opacity: 0.05; }
+  100% { opacity: 1; fill: var(--line-strong); }
+}
+
+@keyframes glitch {
+  0% { opacity: 0.25; }
+  10% { opacity: 0; }
+  30% { opacity: 0.18; }
+  40% { opacity: 0; }
+  70% { opacity: 0.12; }
+  80% { opacity: 0; }
+}
+
+@keyframes dimFill {
+  to { fill: #6c6c66; }
+}
+
+@keyframes dimStroke {
+  to { stroke: #6c6c66; }
+}
+
+@keyframes blinkShut {
+  to { transform: scaleY(0.05); opacity: 0; }
+}
+
+@keyframes appear {
+  to { opacity: 1; }
+}
+
+@keyframes vanish {
+  to { opacity: 0; }
+}
+
+@keyframes lightOff {
+  to { fill: var(--line-strong); }
+}
+
+@keyframes standby {
+  0%, 100% { fill: var(--line-strong); }
+  50% { fill: var(--threat); }
+}
+
+@keyframes shadowSpread {
+  to { transform: scaleX(1.12); opacity: 0.5; }
+}

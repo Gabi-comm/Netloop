@@ -1,9 +1,0 @@
-<resources>
-    <color name="ground">#FF121212</color>
-
-    <style name="Theme.Netloop" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/ground</item>
-        <item name="android:statusBarColor">@color/ground</item>
-        <item name="android:navigationBarColor">@color/ground</item>
-    </style>
-</resources>

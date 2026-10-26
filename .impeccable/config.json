@@ -1,0 +1,32 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.2, 0.9, 0.3, 1.2)",
+        "createdAt": "2026-10-26T00:37:20.696Z",
+        "reason": "Claude: playful cartoon game in a hand-drawn style; overshoot on stamps, pops, stars and card deals is intended game feel, not UI chrome"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.2, 1.6, 0.4, 1)",
+        "createdAt": "2026-10-26T00:37:21.003Z",
+        "reason": "Claude: playful cartoon game in a hand-drawn style; overshoot on stamps, pops, stars and card deals is intended game feel, not UI chrome"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.2, 1.3, 0.4, 1)",
+        "createdAt": "2026-10-26T00:37:21.294Z",
+        "reason": "Claude: playful cartoon game in a hand-drawn style; overshoot on stamps, pops, stars and card deals is intended game feel, not UI chrome"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "wobble",
+        "createdAt": "2026-10-26T00:37:21.596Z",
+        "reason": "Claude: wobble is a literal character animation of the malware blobs in the hero scene"
+      }
+    ]
+  }
+}
