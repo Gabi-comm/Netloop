@@ -46,7 +46,7 @@ export function InstallPrompt() {
     };
   }, []);
 
-  if (!open || pathname.startsWith("/play")) return null;
+  if (!open || pathname.startsWith("/play") || pathname.startsWith("/endless")) return null;
 
   const install = async () => {
     if (!deferred) return;

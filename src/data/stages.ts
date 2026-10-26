@@ -7,6 +7,7 @@ export type WaveDef = {
   legitShare: number;
   mix: Partial<Record<PacketKindId, number>>;
   featured?: PacketKindId[];
+  speed?: number;
 };
 
 export type Stage = {
@@ -106,8 +107,56 @@ export const Stages: Stage[] = [
 
 export const WAVES_PER_STAGE = 3;
 
+export const ENDLESS_ID = 0;
+
+const ENDLESS_ROTATION: PacketKindId[] = ["zeroDay", "worm", "ransomware", "spoofer", "trojan", "mitm", "botnet", "pingFlood"];
+
+export function endlessWave(wave: number): WaveDef {
+  const k = wave - 1;
+  const ramp = Math.min(k, 8) / 8;
+  return {
+    count: Math.min(12 + k * 2, 40),
+    intervalMs: Math.max(620, 1250 - k * 55),
+    legitShare: 0.3 - ramp * 0.06,
+    mix: {
+      malware: 3,
+      pingFlood: 1.5,
+      zeroDay: 1 + ramp,
+      worm: 1.5,
+      ransomware: 1 + ramp,
+      spoofer: 1.5,
+      trojan: 1 + ramp,
+      mitm: 1 + ramp,
+      botnet: 0.6 + ramp,
+    },
+    featured: [ENDLESS_ROTATION[(k * 2) % ENDLESS_ROTATION.length], ENDLESS_ROTATION[(k * 2 + 1) % ENDLESS_ROTATION.length]],
+    speed: Math.min(1 + k * 0.035, 1.9),
+  };
+}
+
+export const EndlessStage: Stage = {
+  id: ENDLESS_ID,
+  name: "The Cloud",
+  place: "endless traffic, every threat",
+  tagline: "every threat. how long can you last?",
+  layout: "datacenter",
+  seed: 9909,
+  reward: 0,
+  newThreats: [],
+  endless: true,
+  waves: [endlessWave(1), endlessWave(2), endlessWave(3)],
+};
+
 export function getStage(id: number): Stage | undefined {
-  return Stages.find((s) => s.id === id);
+  return id === ENDLESS_ID ? EndlessStage : Stages.find((s) => s.id === id);
+}
+
+export function waveFor(stage: Stage, wave: number): WaveDef {
+  return stage.endless ? endlessWave(wave) : stage.waves[wave - 1];
+}
+
+export function endlessReward(wavesSurvived: number, dataEarned: number): number {
+  return wavesSurvived * 8 + dataEarned;
 }
 
 export function stageThreats(stage: Stage): PacketKindId[] {

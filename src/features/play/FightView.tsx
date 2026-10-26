@@ -5,6 +5,7 @@ import { HoneypotIcon, PowerIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, UptimeBars } from "@/components/ui";
 import { GameEngine, type Hud } from "@/game/engine";
+import { waveFor } from "@/data/stages";
 import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import type { RunState } from "@/game/runState";
@@ -136,8 +137,10 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   };
   const onPointerUp = () => engine.endLine();
 
-  const def = run.stage.waves[run.wave - 1];
-  const featured = run.wave === 1 ? run.stage.newThreats : (def.featured ?? []);
+  const endless = Boolean(run.stage.endless);
+  const def = waveFor(run.stage, run.wave);
+  const featured = run.wave === 1 && !endless ? run.stage.newThreats : (def.featured ?? []);
+  const where = endless ? "endless" : `zone ${run.stage.id}`;
   const lit = Math.round(hud.waveProgress * SEGMENTS);
 
   return (
@@ -157,14 +160,14 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
           <div className={styles.waveBlock}>
             <span className={styles.waveLabel}>
               WAVE {run.wave}
-              <span className={styles.waveOf}> / {run.maxWaves}</span>
+              <span className={styles.waveOf}> / {endless ? "∞" : run.maxWaves}</span>
             </span>
             <div className={styles.segments} aria-hidden="true">
               {Array.from({ length: SEGMENTS }, (_, i) => (
                 <div key={i} className={`${styles.segment} ${i < lit ? styles.segmentOn : ""}`} />
               ))}
             </div>
-            <span className={styles.zoneName}>zone {run.stage.id} · {run.stage.name.toLowerCase()}</span>
+            <span className={styles.zoneName}>{where} · {run.stage.name.toLowerCase()}</span>
           </div>
           <button
             type="button"
@@ -233,7 +236,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
                 <PowerIcon color={hud.killSwitchUsed ? "#7a7a74" : "var(--threat)"} />
               </button>
               <span className={styles.abilityLabel} style={{ color: hud.killSwitchUsed ? "var(--muted)" : "var(--threat)" }}>
-                {hud.killSwitchUsed ? "kill switch · used" : "kill switch"}
+                kill switch
               </span>
             </div>
           ) : (
@@ -250,7 +253,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
             {featured.map((id) => (
               <span key={id} className={styles.newCard}>
                 <Sprite anim={PacketKinds[id].walk} size={38} />
-                <em>NEW</em> {PacketKinds[id].label}
+                <em>{endless ? "HOT" : "NEW"}</em> {PacketKinds[id].label}
               </span>
             ))}
           </div>
@@ -271,14 +274,14 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
         <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Paused">
           <h2 className={styles.overlayTitle}>PAUSED</h2>
           <p className={styles.overlaySub}>
-            zone {run.stage.id} · wave {run.wave} of {run.maxWaves}
+            {endless ? `the cloud · wave ${run.wave}` : `${where} · wave ${run.wave} of ${run.maxWaves}`}
           </p>
           <ChunkyButton onClick={() => engine.resume()}>RESUME</ChunkyButton>
           <ChunkyButton tone="ghost" size="small" onClick={onRestart}>
-            restart zone
+            {endless ? "restart run" : "restart zone"}
           </ChunkyButton>
           <ChunkyButton tone="ghost" size="small" onClick={onQuit}>
-            back to zones
+            {endless ? "back to home" : "back to zones"}
           </ChunkyButton>
         </div>
       )}

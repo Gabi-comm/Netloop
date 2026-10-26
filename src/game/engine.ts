@@ -1,4 +1,4 @@
-import { stageIntroductions } from "@/data/stages";
+import { stageIntroductions, waveFor } from "@/data/stages";
 import { NetColors } from "./colors";
 import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec } from "./geometry";
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
@@ -82,6 +82,7 @@ export class GameEngine {
   private honeypotReadyAtMs = 0;
   private readonly known: Set<PacketKindId>;
   private readonly introduces: Set<PacketKindId>;
+  private readonly speed: number;
   private readonly briefings: PacketKindId[] = [];
   private hudListener: ((hud: Hud) => void) | null = null;
   private lastHudKey = "";
@@ -95,8 +96,9 @@ export class GameEngine {
     this.uptime = run.uptime;
     this.killSwitchUsed = run.killSwitchUsed;
     this.vpnCharge = hasPatch(run, "vpnTunnel");
-    const def = run.stage.waves[run.wave - 1];
+    const def = waveFor(run.stage, run.wave);
     this.spawns = buildWave(def, this.layout.routes.length, run.rng);
+    this.speed = def.speed ?? 1;
     this.totalThreats = Math.max(1, threatCount(this.spawns));
   }
 
@@ -202,7 +204,7 @@ export class GameEngine {
     for (let i = this.packets.length - 1; i >= 0; i--) {
       const p = this.packets[i];
       const cable = this.cables[p.cable];
-      const step = (p.kind.speed * slow * dt * this.height) / cable.length;
+      const step = (p.kind.speed * this.speed * slow * dt * this.height) / cable.length;
 
       if (p.openingAtMs !== null) {
         if (this.clockMs - p.openingAtMs >= durationMs(Sprites.trojan_open)) {

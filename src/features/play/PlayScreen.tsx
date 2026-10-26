@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { endlessReward } from "@/data/stages";
 import { createRun, starsFor, type RunState } from "@/game/runState";
 import { SpriteCache } from "@/game/renderer";
 import type { Patch } from "@/game/patches";
 import { isStageUnlocked, progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { FightView } from "./FightView";
 import { PowerUpView } from "./PowerUpView";
-import { NetworkDownView, ZoneClearedView, type StageReward } from "./ResultView";
+import { NetworkDownView, ZoneClearedView, type EndlessResult, type StageReward } from "./ResultView";
 import styles from "./play.module.css";
 
 type View = "fight" | "powerup" | "cleared" | "lost";
@@ -29,6 +30,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const [run, setRun] = useState(() => createRun(stageId));
   const [view, setView] = useState<View>("fight");
   const [reward, setReward] = useState<StageReward | null>(null);
+  const [endlessResult, setEndlessResult] = useState<EndlessResult | null>(null);
   const [sprites] = useState(() => new SpriteCache());
   const [ready, setReady] = useState(false);
 
@@ -48,10 +50,21 @@ export function PlayScreen({ stageId }: { stageId: number }) {
     setAttempt((a) => a + 1);
     setRun(createRun(stageId, attempt + 1));
     setReward(null);
+    setEndlessResult(null);
     setView("fight");
   }, [stageId, attempt]);
 
-  const quit = useCallback(() => router.push("/zones"), [router]);
+  const quit = useCallback(() => router.push(run.stage.endless ? "/" : "/zones"), [router, run]);
+
+  const onLost = useCallback(() => {
+    if (run.stage.endless) {
+      const survived = run.wave - 1;
+      const total = endlessReward(survived, run.dataEarned);
+      const previous = progressStore.recordEndless(survived, run.score, total);
+      setEndlessResult({ survived, reward: total, previous });
+    }
+    setView("lost");
+  }, [run]);
 
   const onCleared = useCallback(() => {
     if (run.wave < run.maxWaves) {
@@ -89,7 +102,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
           run={run}
           sprites={sprites}
           onCleared={onCleared}
-          onLost={() => setView("lost")}
+          onLost={onLost}
           onRestart={restart}
           onQuit={quit}
         />
@@ -99,6 +112,6 @@ export function PlayScreen({ stageId }: { stageId: number }) {
     case "cleared":
       return <ZoneClearedView run={run} reward={reward!} onContinue={quit} onReplay={restart} />;
     case "lost":
-      return <NetworkDownView run={run} onRetry={restart} onQuit={quit} />;
+      return <NetworkDownView run={run} endless={endlessResult ?? undefined} onRetry={restart} onQuit={quit} />;
   }
 }

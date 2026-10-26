@@ -986,3 +986,24 @@
   min-height: 0;
   max-height: 200px;
 }
+
+.newBest {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--points);
+  color: var(--ground);
+  font-family: var(--font-display);
+  font-size: 0.85em;
+  letter-spacing: 1px;
+  vertical-align: 2px;
+  animation: stamp 480ms cubic-bezier(0.2, 1.6, 0.4, 1) 600ms both;
+}
+
+.statData {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--data);
+}

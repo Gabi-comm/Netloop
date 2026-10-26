@@ -6,6 +6,7 @@ import { ChunkyButton, DashedRule } from "@/components/ui";
 import { getStage, Stages } from "@/data/stages";
 import { PacketKinds, type PacketKindId } from "@/game/kinds";
 import type { RunState } from "@/game/runState";
+import type { EndlessRecord } from "@/lib/progress";
 import { BitHappy } from "./BitHappy";
 import { BitShutdown } from "./BitShutdown";
 import styles from "./play.module.css";
@@ -82,15 +83,21 @@ function groupBreaches(ids: PacketKindId[]): Breach[] {
   return [...groups.values()].sort((a, b) => Number(b.final) - Number(a.final) || b.count - a.count);
 }
 
-export function NetworkDownView({ run, onRetry, onQuit }: { run: RunState; onRetry: () => void; onQuit: () => void }) {
+export type EndlessResult = { survived: number; reward: number; previous: EndlessRecord };
+
+export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunState; endless?: EndlessResult; onRetry: () => void; onQuit: () => void }) {
   const breaches = groupBreaches(run.breaches);
+  const newBest = endless !== undefined && endless.survived > endless.previous.bestWaves && endless.survived > 0;
   return (
     <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle} style={{ color: "var(--threat)" }}>NETWORK DOWN</h1>
         <DashedRule width={260} />
         <p className={styles.pageSub}>
-          the threats got through on wave {run.wave} of {run.maxWaves}.
+          {endless
+            ? `you held the cloud for ${endless.survived} ${endless.survived === 1 ? "wave" : "waves"}.`
+            : `the threats got through on wave ${run.wave} of ${run.maxWaves}.`}
+          {newBest && <span className={styles.newBest}>NEW BEST!</span>}
         </p>
       </div>
 
@@ -128,14 +135,31 @@ export function NetworkDownView({ run, onRetry, onQuit }: { run: RunState; onRet
           <span className={styles.statValue}>{run.score.toLocaleString()}</span>
           <span className={styles.statLabel}>score</span>
         </div>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>{run.dropped}</span>
-          <span className={styles.statLabel}>threats dropped</span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>{run.stage.id}/{Stages.length}</span>
-          <span className={styles.statLabel}>zone</span>
-        </div>
+        {endless ? (
+          <>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{Math.max(endless.survived, endless.previous.bestWaves)}</span>
+              <span className={styles.statLabel}>best waves</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={`${styles.statValue} ${styles.statData}`}>
+                <DataIcon size={18} />+{endless.reward}
+              </span>
+              <span className={styles.statLabel}>data earned</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{run.dropped}</span>
+              <span className={styles.statLabel}>threats dropped</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{run.stage.id}/{Stages.length}</span>
+              <span className={styles.statLabel}>zone</span>
+            </div>
+          </>
+        )}
       </div>
 
       {breaches.length === 0 && (
@@ -148,7 +172,7 @@ export function NetworkDownView({ run, onRetry, onQuit }: { run: RunState; onRet
 
       <div className={styles.buttonStack}>
         <ChunkyButton onClick={onRetry}>TRY AGAIN</ChunkyButton>
-        <ChunkyButton tone="ghost" size="small" onClick={onQuit}>back to zones</ChunkyButton>
+        <ChunkyButton tone="ghost" size="small" onClick={onQuit}>{endless ? "back to home" : "back to zones"}</ChunkyButton>
       </div>
     </main>
   );

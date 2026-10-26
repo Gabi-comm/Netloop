@@ -26,7 +26,7 @@ export function createRun(stageId: number, seedOffset = 0): RunState {
   return {
     stage,
     wave: 1,
-    maxWaves: WAVES_PER_STAGE,
+    maxWaves: stage.endless ? Infinity : WAVES_PER_STAGE,
     score: 0,
     uptime: 3,
     maxUptime: 3,

@@ -6,11 +6,11 @@ import { useProgress, useHydrated } from "@/lib/progress";
 import { BackIcon, DataIcon } from "./Icons";
 import styles from "./ui.module.css";
 
-export function Screen({ children, doodles = true }: { children: ReactNode; doodles?: boolean }) {
+export function Screen({ children, doodles = true, fit = false }: { children: ReactNode; doodles?: boolean; fit?: boolean }) {
   return (
     <main className={styles.screen}>
       {doodles && <Doodles />}
-      <div className={styles.column}>{children}</div>
+      <div className={`${styles.column} ${fit ? styles.columnFit : ""}`}>{children}</div>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { Stages } from "@/data/stages";
+import { ENDLESS_ID, Stages } from "@/data/stages";
 
 export type StageRecord = { stars: number; best: number; clears: number };
 
@@ -12,11 +12,14 @@ export type Progress = {
   lastCleared: number | null;
   inventory: string[];
   seen: string[];
+  endless: EndlessRecord;
 };
+
+export type EndlessRecord = { bestWaves: number; bestScore: number; runs: number };
 
 const KEY = "netloop.progress.v1";
 
-const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [] };
+const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [], endless: { bestWaves: 0, bestScore: 0, runs: 0 } };
 
 let current: Progress = EMPTY;
 let loaded = false;
@@ -130,12 +133,25 @@ export const progressStore = {
     save({ ...prev, seen: [...prev.seen, kindId] });
   },
 
+  recordEndless(wavesSurvived: number, score: number, dataEarned: number): EndlessRecord {
+    const prev = getSnapshot();
+    const old = prev.endless;
+    const next = {
+      bestWaves: Math.max(old.bestWaves, wavesSurvived),
+      bestScore: Math.max(old.bestScore, score),
+      runs: old.runs + 1,
+    };
+    save({ ...prev, data: prev.data + dataEarned, endless: next });
+    return old;
+  },
+
   reset() {
     save(EMPTY);
   },
 };
 
 export function isStageUnlocked(progress: Progress, stageId: number): boolean {
+  if (stageId === ENDLESS_ID) return true;
   return stageId === 1 || Boolean(progress.stages[stageId - 1]);
 }
 

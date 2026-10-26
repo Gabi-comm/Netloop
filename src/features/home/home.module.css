@@ -16,7 +16,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(64px, 22vw, 92px);
+  font-size: clamp(46px, min(22vw, 11dvh), 92px);
   line-height: 1;
   letter-spacing: 5px;
 }
@@ -26,15 +26,15 @@
 }
 
 .tagline {
-  margin: 10px 0 0;
-  font-size: clamp(20px, 5.6vw, 24px);
+  margin: clamp(4px, 1.2dvh, 10px) 0 0;
+  font-size: clamp(16px, min(5.6vw, 3dvh), 24px);
   color: var(--soft);
   text-align: center;
 }
 
 .heroWrap {
-  flex: 1 1 auto;
-  min-height: 150px;
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,7 +44,7 @@
   width: 100%;
   max-width: 342px;
   height: auto;
-  max-height: 32dvh;
+  max-height: 100%;
   overflow: visible;
 }
 
@@ -129,7 +129,7 @@
 .playHint {
   margin: -4px 0 0;
   text-align: center;
-  font-size: 20px;
+  font-size: clamp(15px, 2.6dvh, 20px);
   color: var(--muted);
 }
 
@@ -141,7 +141,7 @@
 
 .tile {
   position: relative;
-  min-height: 86px;
+  min-height: clamp(62px, 11dvh, 86px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -151,7 +151,7 @@
   border: 2.5px solid var(--line);
   border-radius: var(--radius-md);
   color: var(--chalk);
-  font-size: 21px;
+  font-size: clamp(17px, 2.9dvh, 21px);
   text-decoration: none;
   transition: transform 120ms ease, border-color 120ms ease;
 }
@@ -178,48 +178,6 @@
   line-height: 22px;
 }
 
-.daily {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 2.5px dashed var(--points);
-  border-radius: var(--radius-md);
-}
-
-.dailyText {
-  display: flex;
-  flex-direction: column;
-}
-
-.dailyTitle {
-  font-family: var(--font-display);
-  font-size: 26px;
-  color: var(--points);
-  letter-spacing: 1px;
-}
-
-.dailySub {
-  font-size: 19px;
-  color: var(--muted);
-}
-
-.dailyButton {
-  width: 48px;
-  height: 48px;
-  flex: none;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--points);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 .settingsRow {
   display: flex;
   align-items: center;
@@ -236,3 +194,76 @@
   letter-spacing: 2px;
 }
 
+
+.playWrap > * {
+  min-height: clamp(58px, 10dvh, 76px);
+  font-size: clamp(34px, 6dvh, 46px);
+}
+
+.tile svg {
+  width: clamp(24px, 4.4dvh, 32px);
+  height: auto;
+}
+
+.endless {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(8px, 1.6dvh, 12px) 16px;
+  border: 2.5px dashed var(--data);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--data) 7%, transparent);
+  color: var(--chalk);
+  text-decoration: none;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.endless:hover {
+  color: var(--chalk);
+  background: color-mix(in srgb, var(--data) 13%, transparent);
+}
+
+.endless:active {
+  transform: scale(0.98);
+}
+
+.endlessText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.endlessTitle {
+  font-family: var(--font-display);
+  font-size: clamp(21px, 3.6dvh, 26px);
+  color: var(--data);
+  letter-spacing: 1px;
+}
+
+.endlessName {
+  color: var(--soft);
+  letter-spacing: 0;
+}
+
+.endlessSub {
+  font-size: clamp(15px, 2.6dvh, 19px);
+  color: var(--muted);
+}
+
+.endlessButton {
+  width: clamp(40px, 7dvh, 48px);
+  height: clamp(40px, 7dvh, 48px);
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--data);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: nudge 1.6s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}

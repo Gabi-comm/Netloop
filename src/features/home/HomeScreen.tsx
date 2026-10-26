@@ -25,7 +25,7 @@ export function HomeScreen() {
       : `${stage.name.toLowerCase()} · zone ${stage.id} of ${Stages.length}`;
 
   return (
-    <Screen>
+    <Screen fit>
       <div className={styles.top}>
         <DataPill />
         <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
@@ -45,10 +45,12 @@ export function HomeScreen() {
         <HeroScene />
       </div>
 
-      <ChunkyLink href={allCleared ? "/zones" : `/play/${stageId}`} size="big">
-        PLAY
-        <PlayIcon />
-      </ChunkyLink>
+      <div className={styles.playWrap}>
+        <ChunkyLink href={allCleared ? "/zones" : `/play/${stageId}`} size="big">
+          PLAY
+          <PlayIcon />
+        </ChunkyLink>
+      </div>
       <p className={styles.playHint}>{hint}</p>
 
       <nav className={styles.tiles} aria-label="Main menu">
@@ -67,17 +69,21 @@ export function HomeScreen() {
         </Link>
       </nav>
 
-      <div className={styles.daily}>
-        <div className={styles.dailyText}>
-          <span className={styles.dailyTitle}>
-            DAILY INCIDENT <Soon />
+      <Link href="/endless" className={styles.endless} aria-label="Play endless mode, The Cloud">
+        <span className={styles.endlessText}>
+          <span className={styles.endlessTitle}>
+            ENDLESS <span className={styles.endlessName}>· the cloud</span>
           </span>
-          <span className={styles.dailySub}>same run for everyone</span>
-        </div>
-        <button type="button" className={styles.dailyButton} aria-label="Play the daily incident (coming soon)" disabled>
+          <span className={styles.endlessSub}>
+            {hydrated && progress.endless.runs > 0
+              ? `best: ${progress.endless.bestWaves} ${progress.endless.bestWaves === 1 ? "wave" : "waves"} · ${progress.endless.bestScore.toLocaleString()} pts`
+              : "every threat. how long can you last?"}
+          </span>
+        </span>
+        <span className={styles.endlessButton} aria-hidden="true">
           <ArrowIcon />
-        </button>
-      </div>
+        </span>
+      </Link>
 
       <Sheet open={settingsOpen} onClose={() => setSettingsOpen(false)} label="Settings">
         <h2 className={styles.sheetTitle}>SETTINGS</h2>
