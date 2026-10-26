@@ -33,7 +33,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
   };
 
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>WAVE CLEAR!</h1>
         <DashedRule width={260} />
@@ -84,12 +84,14 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
 
       <div className={styles.spacer} />
 
-      <ChunkyButton
-        disabled={offers.length > 0 && picked === null}
-        onClick={() => onInstall(picked === null ? null : offers[picked])}
-      >
-        {offers.length === 0 ? "CONTINUE" : "INSTALL PATCH"}
-      </ChunkyButton>
+      <div className={styles.installWrap}>
+        <ChunkyButton
+          disabled={offers.length > 0 && picked === null}
+          onClick={() => onInstall(picked === null ? null : offers[picked])}
+        >
+          {offers.length === 0 ? "CONTINUE" : "INSTALL PATCH"}
+        </ChunkyButton>
+      </div>
       <div className={styles.reroll}>
         <button
           type="button"

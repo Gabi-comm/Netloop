@@ -818,3 +818,68 @@
 .rerollNoteShort {
   color: var(--threat);
 }
+
+.pageFit {
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: max(clamp(10px, 2.5dvh, 32px), env(safe-area-inset-top));
+  padding-bottom: max(clamp(8px, 2dvh, 24px), env(safe-area-inset-bottom));
+  gap: clamp(5px, 1.2dvh, 14px);
+}
+
+.pageFit .pageTitle {
+  font-size: clamp(34px, min(11vw, 6.5dvh), 64px);
+  white-space: nowrap;
+}
+
+.pageFit .pageSub {
+  margin-top: 4px;
+  font-size: clamp(16px, 2.6dvh, 22px);
+}
+
+.pageFit .cards {
+  gap: clamp(8px, 1.4dvh, 14px);
+}
+
+.pageFit .card {
+  gap: 12px;
+  padding: clamp(6px, 1.5dvh, 16px) 12px;
+}
+
+.pageFit .cardIcon {
+  width: clamp(48px, 9.5dvh, 84px);
+  height: clamp(48px, 9.5dvh, 84px);
+  border-radius: 14px;
+}
+
+.pageFit .cardIcon img {
+  width: 74%;
+  height: auto;
+}
+
+.pageFit .cardTag {
+  font-size: clamp(13px, 2.2dvh, 19px);
+}
+
+.pageFit .cardTitle {
+  font-size: clamp(21px, 4dvh, 32px);
+}
+
+.pageFit .cardDesc {
+  font-size: clamp(14px, 2.5dvh, 20px);
+  line-height: 1.15;
+}
+
+.pageFit .textButton {
+  min-height: 36px;
+}
+
+.pageFit .installWrap > button {
+  min-height: clamp(52px, 8.5dvh, 72px);
+  font-size: clamp(28px, 4.8dvh, 38px);
+}
+
+.pageFit .rerollNote {
+  font-size: clamp(13px, 2dvh, 16px);
+}
