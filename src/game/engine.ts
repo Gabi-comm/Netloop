@@ -1,3 +1,4 @@
+import { stageIntroductions } from "@/data/stages";
 import { NetColors } from "./colors";
 import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec } from "./geometry";
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
@@ -80,6 +81,7 @@ export class GameEngine {
   private freezeUntilMs = 0;
   private honeypotReadyAtMs = 0;
   private readonly known: Set<PacketKindId>;
+  private readonly introduces: Set<PacketKindId>;
   private readonly briefings: PacketKindId[] = [];
   private hudListener: ((hud: Hud) => void) | null = null;
   private lastHudKey = "";
@@ -87,6 +89,7 @@ export class GameEngine {
   constructor(run: RunState, known: Iterable<PacketKindId> = []) {
     this.run = run;
     this.known = new Set([...run.briefed, ...known]);
+    this.introduces = new Set(stageIntroductions(run.stage));
     this.layout = Layouts[run.stage.layout];
     this.score = run.score;
     this.uptime = run.uptime;
@@ -324,7 +327,7 @@ export class GameEngine {
 
   private spawn(s: Spawn) {
     const kind = PacketKinds[s.kind];
-    if (kind.codex && !this.run.stage.endless && !this.known.has(kind.id)) {
+    if (this.introduces.has(kind.id) && !this.known.has(kind.id)) {
       this.known.add(kind.id);
       this.run.briefed.push(kind.id);
       this.briefings.push(kind.id);

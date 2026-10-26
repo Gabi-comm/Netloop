@@ -115,3 +115,8 @@ export function stageThreats(stage: Stage): PacketKindId[] {
   for (const wave of stage.waves) for (const id of Object.keys(wave.mix) as PacketKindId[]) seen.add(id);
   return [...seen];
 }
+
+export function stageIntroductions(stage: Stage): PacketKindId[] {
+  if (stage.endless) return [];
+  return stage.id === Stages[0].id ? ["legit", ...stage.newThreats] : stage.newThreats;
+}
