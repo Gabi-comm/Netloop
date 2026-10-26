@@ -1,0 +1,155 @@
+.bit {
+  overflow: visible;
+}
+
+.bit * {
+  transform-box: view-box;
+}
+
+.shadow {
+  fill: #000;
+  opacity: 0.35;
+  transform-origin: 50px 94px;
+  animation: shadowHop 1.1s ease-in-out 900ms infinite;
+}
+
+.hop {
+  transform-origin: 50px 90px;
+  animation:
+    popIn 600ms cubic-bezier(0.2, 1.5, 0.4, 1) both,
+    hop 1.1s ease-in-out 900ms infinite;
+}
+
+.body {
+  transform-origin: 50px 90px;
+  animation: squash 1.1s ease-in-out 900ms infinite;
+}
+
+.legs,
+.stick {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.antennaLeft {
+  transform-origin: 38px 22px;
+  animation: waveLeft 550ms ease-in-out infinite alternate;
+}
+
+.antennaRight {
+  transform-origin: 62px 21px;
+  animation: waveRight 550ms ease-in-out 140ms infinite alternate;
+}
+
+.led {
+  animation: glow 1.1s ease-in-out infinite;
+}
+
+.ledPink {
+  fill: var(--pink);
+}
+
+.ledCyan {
+  fill: var(--data);
+  animation-delay: 550ms;
+}
+
+.shell {
+  fill: var(--chalk);
+}
+
+.eyes {
+  fill: none;
+  stroke: var(--ground);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.smile {
+  fill: var(--ground);
+  stroke: var(--ground);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.cheek {
+  fill: var(--pink);
+  opacity: 0.55;
+}
+
+.light {
+  fill: var(--legit);
+  animation: chase 900ms steps(1, end) infinite;
+}
+
+.light2 {
+  animation-delay: 300ms;
+}
+
+.light3 {
+  animation-delay: 600ms;
+}
+
+.spark path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.spark {
+  opacity: 0;
+  animation: spark 1.1s ease-out infinite;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.3) translateY(20px); opacity: 0; }
+}
+
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-16px) rotate(-4deg); }
+  55% { transform: translateY(-16px) rotate(4deg); }
+}
+
+@keyframes squash {
+  0%, 100% { transform: scale(1.1, 0.9); }
+  15% { transform: scale(0.94, 1.08); }
+  50% { transform: scale(1); }
+  85% { transform: scale(0.96, 1.05); }
+}
+
+@keyframes shadowHop {
+  0%, 100% { transform: scaleX(1.1); opacity: 0.4; }
+  50% { transform: scaleX(0.7); opacity: 0.18; }
+}
+
+@keyframes waveLeft {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(10deg); }
+}
+
+@keyframes waveRight {
+  from { transform: rotate(14deg); }
+  to { transform: rotate(-10deg); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes chase {
+  0% { fill: var(--legit); }
+  33% { fill: var(--data); }
+  66% { fill: var(--points); }
+}
+
+@keyframes spark {
+  0% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  20% { opacity: 1; transform: scale(1.1) rotate(45deg); }
+  60% { opacity: 0; transform: scale(0.6) rotate(90deg); }
+  100% { opacity: 0; }
+}

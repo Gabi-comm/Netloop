@@ -6,7 +6,7 @@ import { ChunkyButton, DashedRule } from "@/components/ui";
 import { getStage, Stages } from "@/data/stages";
 import { PacketKinds, type PacketKindId } from "@/game/kinds";
 import type { RunState } from "@/game/runState";
-import { Sprites } from "@/game/sprites";
+import { BitHappy } from "./BitHappy";
 import { BitShutdown } from "./BitShutdown";
 import styles from "./play.module.css";
 
@@ -31,7 +31,7 @@ export function ZoneClearedView({ run, reward, onContinue, onReplay }: { run: Ru
       </div>
 
       <div className={styles.resultArt}>
-        <Sprite anim={Sprites.bit_idle} size={110} label="Bit" />
+        <BitHappy size={120} />
       </div>
 
       <div className={styles.statRow}>
