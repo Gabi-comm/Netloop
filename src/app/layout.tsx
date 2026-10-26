@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Gochi_Hand, Patrick_Hand } from "next/font/google";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         {children}
         <ServiceWorker />
+        <InstallPrompt />
       </body>
     </html>
   );
