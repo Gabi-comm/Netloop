@@ -950,8 +950,8 @@
 }
 
 .pageFit .breachArt {
-  width: clamp(38px, 6.5dvh, 52px);
-  height: clamp(38px, 6.5dvh, 52px);
+  width: clamp(34px, 6dvh, 52px);
+  height: clamp(34px, 6dvh, 52px);
 }
 
 .pageFit .breachArt img {
@@ -965,4 +965,24 @@
 
 .pageFit .breachCount {
   font-size: clamp(22px, 3.9dvh, 28px);
+}
+
+.pageFit .resultArt:has(+ .breaches) svg {
+  width: clamp(56px, 11dvh, 100px);
+}
+
+.pageFit .cards {
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+
+.pageFit .cards ~ .spacer {
+  display: none;
+}
+
+.pageFit .cards > .card {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 200px;
 }
