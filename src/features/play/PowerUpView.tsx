@@ -7,6 +7,7 @@ import { ChunkyButton, DashedRule, UptimeBars } from "@/components/ui";
 import { offerPatches, patchTag, RarityStyle, type Patch } from "@/game/patches";
 import { rerollCost, type RunState } from "@/game/runState";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
+import { PATCH_INTRO_TIP, PatchIntro } from "./PatchIntro";
 import styles from "./play.module.css";
 
 export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (patch: Patch | null) => void }) {
@@ -19,6 +20,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
   const cost = rerollCost(run);
   const balance = hydrated ? progress.data : 0;
   const canAfford = !freeUsed || balance >= cost;
+  const showIntro = hydrated && !progress.seen.includes(PATCH_INTRO_TIP);
 
   const reroll = () => {
     if (freeUsed) {
@@ -37,7 +39,6 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>WAVE CLEAR!</h1>
         <DashedRule width={260} />
-        <p className={styles.pageSub}>pick 1 patch. it lasts the whole zone.</p>
       </div>
 
       <div className={styles.hudRow}>
@@ -119,6 +120,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
           </span>
         )}
       </div>
+      {showIntro && <PatchIntro onDismiss={() => progressStore.markSeen(PATCH_INTRO_TIP)} />}
     </main>
   );
 }
