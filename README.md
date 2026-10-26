@@ -25,6 +25,4 @@ npm run dev
 | `src/data/stages.ts` | the 5 demo zones | Gab |
 | `public/sprites/` | SVG sprite frames and `preview.html` | shared |
 
-Work only inside your own folder, on a branch, and open a PR into `main`.
 
-Code has no comments. All docs live in the team's Obsidian vault (`Netloop — Hub`).
