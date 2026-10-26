@@ -15,7 +15,7 @@ export type StageReward = { stars: number; stageReward: number; packetData: numb
 export function ZoneClearedView({ run, reward, onContinue, onReplay }: { run: RunState; reward: StageReward; onContinue: () => void; onReplay: () => void }) {
   const next = getStage(run.stage.id + 1);
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>ZONE SECURED!</h1>
         <DashedRule width={260} />
@@ -85,7 +85,7 @@ function groupBreaches(ids: PacketKindId[]): Breach[] {
 export function NetworkDownView({ run, onRetry, onQuit }: { run: RunState; onRetry: () => void; onQuit: () => void }) {
   const breaches = groupBreaches(run.breaches);
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle} style={{ color: "var(--threat)" }}>NETWORK DOWN</h1>
         <DashedRule width={260} />

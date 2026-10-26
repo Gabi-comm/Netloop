@@ -829,7 +829,7 @@
 }
 
 .pageFit .pageTitle {
-  font-size: clamp(34px, min(11vw, 6.5dvh), 64px);
+  font-size: clamp(30px, min(9.6vw, 6.5dvh), 64px);
   white-space: nowrap;
 }
 
@@ -882,4 +882,87 @@
 
 .pageFit .rerollNote {
   font-size: clamp(13px, 2dvh, 16px);
+}
+
+.pageFit .stars {
+  margin: 0;
+}
+
+.pageFit .star svg {
+  width: clamp(38px, 7dvh, 58px);
+  height: auto;
+}
+
+.pageFit .resultArt {
+  margin: 0;
+}
+
+.pageFit .resultArt svg {
+  width: clamp(72px, 14dvh, 120px);
+  height: auto;
+}
+
+.pageFit .stat {
+  padding: clamp(4px, 1dvh, 8px) 4px;
+}
+
+.pageFit .statValue {
+  font-size: clamp(22px, 4dvh, 30px);
+}
+
+.pageFit .statLabel {
+  font-size: clamp(13px, 2.1dvh, 16px);
+}
+
+.pageFit .breakdown {
+  gap: clamp(2px, 0.7dvh, 6px);
+  padding: clamp(8px, 1.6dvh, 14px) 14px;
+  font-size: clamp(15px, 2.6dvh, 20px);
+}
+
+.pageFit .breakdownTotal {
+  font-size: clamp(20px, 3.5dvh, 26px);
+}
+
+.pageFit .buttonStack {
+  gap: clamp(12px, 1.8dvh, 16px);
+}
+
+.pageFit .buttonStack > button:first-child {
+  min-height: clamp(52px, 8.5dvh, 72px);
+  font-size: clamp(26px, 4.6dvh, 38px);
+}
+
+.pageFit .breaches {
+  gap: clamp(4px, 1dvh, 8px);
+}
+
+.pageFit .breachesTitle {
+  font-size: clamp(19px, 3.3dvh, 24px);
+}
+
+.pageFit .breachList {
+  gap: clamp(5px, 1dvh, 8px);
+}
+
+.pageFit .breach {
+  padding: clamp(4px, 0.9dvh, 8px) 12px;
+}
+
+.pageFit .breachArt {
+  width: clamp(38px, 6.5dvh, 52px);
+  height: clamp(38px, 6.5dvh, 52px);
+}
+
+.pageFit .breachArt img {
+  width: 80%;
+  height: auto;
+}
+
+.pageFit .breachName {
+  font-size: clamp(18px, 3.1dvh, 22px);
+}
+
+.pageFit .breachCount {
+  font-size: clamp(22px, 3.9dvh, 28px);
 }
