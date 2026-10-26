@@ -36,11 +36,13 @@ export function PatchStrip({ patches }: { patches: PatchId[] }) {
 
   if (patches.length === 0) return null;
   const shown = open ? Patches[open] : null;
+  const counts = new Map<PatchId, number>();
+  for (const id of patches) counts.set(id, (counts.get(id) ?? 0) + 1);
 
   return (
     <div className={styles.patchWrap}>
       <ul className={styles.patchStrip} aria-label="Installed patches. Long press one to see what it does.">
-        {patches.map((id) => {
+        {[...counts].map(([id, count]) => {
           const patch = Patches[id];
           return (
             <li key={id}>
@@ -48,7 +50,7 @@ export function PatchStrip({ patches }: { patches: PatchId[] }) {
                 type="button"
                 className={`${styles.patchIcon} ${open === id ? styles.patchIconOpen : ""}`}
                 style={{ borderColor: RarityStyle[patch.rarity].color }}
-                aria-label={`${patch.title}: ${patch.description}`}
+                aria-label={`${patch.title}${count > 1 ? ` ×${count}` : ""}: ${patch.description}`}
                 aria-expanded={open === id}
                 onPointerDown={onDown(id)}
                 onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(id)}
@@ -58,6 +60,7 @@ export function PatchStrip({ patches }: { patches: PatchId[] }) {
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <Sprite anim={patch.icon} size={26} />
+                {count > 1 && <span className={styles.patchCount} aria-hidden="true">×{count}</span>}
               </button>
             </li>
           );

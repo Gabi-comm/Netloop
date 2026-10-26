@@ -227,15 +227,18 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
             <div className={styles.ability}>
               <button
                 type="button"
-                aria-label={hud.killSwitchUsed ? "Kill Switch, used this run" : "Use Kill Switch"}
+                aria-label={hud.killSwitchCharges > 0 ? `Use Kill Switch, ${hud.killSwitchCharges} left` : "Kill Switch, all used"}
                 className={styles.abilityButton}
                 style={{ border: "3px solid var(--threat)" }}
-                disabled={hud.killSwitchUsed}
+                disabled={hud.killSwitchCharges === 0}
                 onClick={() => engine.useKillSwitch()}
               >
-                <PowerIcon color={hud.killSwitchUsed ? "#7a7a74" : "var(--threat)"} />
+                <PowerIcon color={hud.killSwitchCharges === 0 ? "#7a7a74" : "var(--threat)"} />
+                {hud.killSwitchCharges > 1 && (
+                  <span className={styles.abilityCount} aria-hidden="true">×{hud.killSwitchCharges}</span>
+                )}
               </button>
-              <span className={styles.abilityLabel} style={{ color: hud.killSwitchUsed ? "var(--muted)" : "var(--threat)" }}>
+              <span className={styles.abilityLabel} style={{ color: hud.killSwitchCharges === 0 ? "var(--muted)" : "var(--threat)" }}>
                 kill switch
               </span>
             </div>

@@ -17,6 +17,7 @@ export type Patch = {
   title: string;
   rarity: Rarity;
   isActive: boolean;
+  stackable?: boolean;
   description: string;
   icon: SpriteAnim;
 };
@@ -27,7 +28,7 @@ export const Patches: Record<PatchId, Patch> = {
   autoPatch: { id: "autoPatch", title: "Auto-Patch", rarity: "rare", isActive: false, description: "regain 1 uptime after every wave", icon: Sprites.patch_auto_patch },
   vpnTunnel: { id: "vpnTunnel", title: "VPN Tunnel", rarity: "rare", isActive: false, description: "first zero-day hit each wave won't break your line", icon: Sprites.patch_vpn_tunnel },
   honeypot: { id: "honeypot", title: "Honeypot", rarity: "rare", isActive: true, description: "tap to freeze every threat for 3 seconds", icon: Sprites.patch_honeypot },
-  killSwitch: { id: "killSwitch", title: "Kill Switch", rarity: "epic", isActive: true, description: "tap once per run to drop every threat on screen", icon: Sprites.patch_kill_switch },
+  killSwitch: { id: "killSwitch", title: "Kill Switch", rarity: "epic", isActive: true, stackable: true, description: "tap to drop every threat on screen. each copy is one use", icon: Sprites.patch_kill_switch },
 };
 
 export function patchTag(patch: Patch): string {
@@ -37,7 +38,7 @@ export function patchTag(patch: Patch): string {
 
 export function offerPatches(owned: readonly PatchId[], rng: Rng, count = 3): Patch[] {
   return rng
-    .shuffle(Object.values(Patches).filter((p) => !owned.includes(p.id)))
+    .shuffle(Object.values(Patches).filter((p) => p.stackable || !owned.includes(p.id)))
     .slice(0, count)
     .sort((a, b) => RarityStyle[a.rarity].order - RarityStyle[b.rarity].order);
 }

@@ -3,7 +3,8 @@ import { NetColors } from "./colors";
 import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec } from "./geometry";
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
 import { buildCables, Layouts, type Cable, type NetworkLayout } from "./network";
-import { hasPatch, type RunState } from "./runState";
+import { POP_MS, type Pop } from "./pops";
+import { hasPatch, killSwitchCharges, type RunState } from "./runState";
 import { durationMs, Sprites, type SpriteAnim } from "./sprites";
 import { buildWave, threatCount, type Spawn } from "./wavePlan";
 
@@ -36,7 +37,7 @@ export type Hud = {
   drawing: boolean;
   waveProgress: number;
   killSwitchOwned: boolean;
-  killSwitchUsed: boolean;
+  killSwitchCharges: number;
   honeypotOwned: boolean;
   honeypotReady: boolean;
   honeypotCooldown: number;
@@ -57,7 +58,6 @@ export class GameEngine {
   combo = 1;
   uptime: number;
   bandwidth = 1;
-  killSwitchUsed: boolean;
 
   clockMs = 0;
   serverHurtAtMs = -1e9;
@@ -70,6 +70,7 @@ export class GameEngine {
 
   readonly packets: Packet[] = [];
   readonly effects: Effect[] = [];
+  readonly pops: Pop[] = [];
   readonly popups: Popup[] = [];
   readonly line: Vec[] = [];
 
@@ -94,7 +95,6 @@ export class GameEngine {
     this.layout = Layouts[run.stage.layout];
     this.score = run.score;
     this.uptime = run.uptime;
-    this.killSwitchUsed = run.killSwitchUsed;
     this.vpnCharge = hasPatch(run, "vpnTunnel");
     const def = waveFor(run.stage, run.wave);
     this.spawns = buildWave(def, this.layout.routes.length, run.rng);
@@ -142,7 +142,7 @@ export class GameEngine {
       drawing: this.drawing,
       waveProgress: Math.max(0, Math.min(1, this.resolvedThreats / (this.resolvedThreats + remaining + alive || 1))),
       killSwitchOwned: hasPatch(this.run, "killSwitch"),
-      killSwitchUsed: this.killSwitchUsed,
+      killSwitchCharges: killSwitchCharges(this.run),
       honeypotOwned,
       honeypotReady: honeypotOwned && this.clockMs >= this.honeypotReadyAtMs,
       honeypotCooldown: honeypotOwned ? Math.max(0, (this.honeypotReadyAtMs - this.clockMs) / HONEYPOT_COOLDOWN_MS) : 0,
@@ -155,7 +155,7 @@ export class GameEngine {
     const hud = this.hud();
     const key = [
       hud.phase, hud.score, hud.combo, hud.uptime, Math.round(hud.bandwidth * 40), hud.drawing, Math.round(hud.waveProgress * 20),
-      hud.killSwitchUsed, hud.honeypotReady, Math.round(hud.honeypotCooldown * 20), hud.briefing,
+      hud.killSwitchCharges, hud.honeypotReady, Math.round(hud.honeypotCooldown * 20), hud.briefing,
     ].join("|");
     if (key === this.lastHudKey) return;
     this.lastHudKey = key;
@@ -241,6 +241,7 @@ export class GameEngine {
 
     if (!this.drawing) this.bandwidth = Math.min(1, this.bandwidth + 0.35 * dt);
     this.prune(this.effects, (e) => this.clockMs - e.startMs > Math.max(durationMs(e.anim), 200));
+    this.prune(this.pops, (p) => this.clockMs - p.startMs > POP_MS);
     this.prune(this.popups, (p) => this.clockMs - p.startMs > (p.big ? 1400 : 900));
 
     if (this.phase === "playing" && this.spawns.length === 0 && !this.packets.some((p) => p.kind.isThreat)) this.finishWave();
@@ -309,9 +310,8 @@ export class GameEngine {
   }
 
   useKillSwitch() {
-    if (!hasPatch(this.run, "killSwitch") || this.killSwitchUsed || this.phase !== "playing") return;
-    this.killSwitchUsed = true;
-    this.run.killSwitchUsed = true;
+    if (killSwitchCharges(this.run) === 0 || this.phase !== "playing") return;
+    this.run.killSwitchSpent++;
     const dropped = this.packets.filter((p) => p.kind.isThreat);
     for (const p of dropped) this.drop(p, 1);
     this.removeAll(dropped);
@@ -445,7 +445,15 @@ export class GameEngine {
     this.score += gain;
     this.resolvedThreats++;
     this.run.dropped++;
-    this.effects.push({ anim: Sprites.malware_pop, at: p.position, startMs: this.clockMs, size: p.kind.size * this.scale * 1.4 });
+    this.pops.push({
+      kind: p.kind.id,
+      anim: p.kind.id === "spoofer" ? Sprites.spoofer_walk : this.spriteFor(p),
+      at: { ...p.position },
+      startMs: this.clockMs,
+      size: p.kind.size * this.scale * (p.kind.id === "botnet" ? 1.5 : 1.3),
+      seed: p.id + 1,
+    });
+    if (p.kind.id === "malware") this.effects.push({ anim: Sprites.malware_pop, at: p.position, startMs: this.clockMs, size: p.kind.size * this.scale * 1.4 });
     this.popups.push({ text: `+${gain}`, at: p.position, startMs: this.clockMs, color: NetColors.points });
   }
 
@@ -471,7 +479,6 @@ export class GameEngine {
   private commitToRun() {
     this.run.score = this.score;
     this.run.uptime = this.uptime;
-    this.run.killSwitchUsed = this.killSwitchUsed;
   }
 
   private removeAll(items: Packet[]) {

@@ -1,6 +1,7 @@
 import { NetColors } from "./colors";
 import type { GameEngine } from "./engine";
 import { pointInPolygon, type Vec } from "./geometry";
+import { drawPop } from "./pops";
 import { allSpriteUrls, frameAt, spriteUrl, Sprites, type SpriteAnim } from "./sprites";
 
 export class SpriteCache {
@@ -132,13 +133,8 @@ export class PlayfieldRenderer {
     }
 
     const server = engine.serverPosition;
-    const cloud = this.sprites.get(Sprites.env_cloud, 0);
-    if (cloud) {
-      const cloudW = Math.min(w * 0.82, 300 * s);
-      const cloudH = Math.max(h - server.y + 10 * s, cloudW * 0.24);
-      ctx.drawImage(cloud, server.x - cloudW / 2, h - cloudH, cloudW, cloudH);
-    }
     const sinceHit = now - engine.serverHurtAtMs;
+    this.serverBase(ctx, server, w, s, now, engine.threatsNearServer, sinceHit);
     const hurt = sinceHit < 260;
     const serverAnim = hurt ? Sprites.server_hurt : engine.threatsNearServer ? Sprites.server_alert : Sprites.server_idle;
     if (sinceHit < SERVER_HIT_MS) this.serverHit(ctx, serverAnim, sinceHit, server, 96 * s, s);
@@ -177,6 +173,7 @@ export class PlayfieldRenderer {
 
     if (engine.pointer && engine.drawing) this.bandwidthRing(ctx, engine.pointer, engine.bandwidth, s);
 
+    for (const pop of engine.pops) drawPop(ctx, pop, now - pop.startMs, s, this.sprites.get(pop.anim, now - pop.startMs));
     for (const e of engine.effects) this.sprite(ctx, e.anim, now - e.startMs, e.at, e.size);
 
     ctx.textAlign = "center";
@@ -199,6 +196,81 @@ export class PlayfieldRenderer {
       ctx.fillStyle = "rgba(155, 122, 214, 0.08)";
       ctx.fillRect(0, 0, w, h);
     }
+  }
+
+  private serverBase(ctx: CanvasRenderingContext2D, server: Vec, w: number, s: number, now: number, alert: boolean, sinceHit: number) {
+    const cx = server.x;
+    const top = server.y + 40 * s;
+    const rx = Math.min(w * 0.44, 165 * s);
+    const ry = 21 * s;
+    const depth = 16 * s;
+    const hit = sinceHit < SERVER_HIT_MS ? 1 - sinceHit / SERVER_HIT_MS : 0;
+    const accent = alert || hit > 0 ? NetColors.threat : NetColors.serverLight;
+
+    const glow = ctx.createRadialGradient(cx, top - 30 * s, 10 * s, cx, top - 30 * s, rx * 1.1);
+    glow.addColorStop(0, alert || hit > 0 ? "rgba(232, 85, 61, 0.22)" : "rgba(59, 111, 212, 0.2)");
+    glow.addColorStop(1, "rgba(59, 111, 212, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx - rx * 1.2, top - 30 * s - rx * 1.2, rx * 2.4, rx * 2.4);
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.beginPath();
+    ctx.ellipse(cx, top + depth + 8 * s, rx * 1.02, ry * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#16203a";
+    ctx.beginPath();
+    ctx.ellipse(cx, top + depth, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, top);
+    ctx.ellipse(cx, top, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fill();
+
+    const leds = 7;
+    for (let i = 0; i < leds; i++) {
+      const a = Math.PI * (0.18 + (0.64 * i) / (leds - 1));
+      const lx = cx + Math.cos(a) * rx * 0.97;
+      const ly = top + depth * 0.5 + Math.sin(a) * ry;
+      const on = Math.floor(now / (alert ? 110 : 260)) % leds === i;
+      ctx.fillStyle = on ? (alert ? NetColors.threat : NetColors.data) : "#2a3a63";
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.6 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = "#1f2c50";
+    ctx.beginPath();
+    ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = 0.9;
+    ctx.lineWidth = 3 * s;
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = NetColors.chalk;
+    ctx.lineWidth = 2 * s;
+    ctx.setLineDash([6 * s, 7 * s]);
+    ctx.beginPath();
+    ctx.ellipse(cx, top, rx * 0.72, ry * 0.68, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const period = alert ? 900 : 2200;
+    const q = (now % period) / period;
+    ctx.globalAlpha = (1 - q) * (alert ? 0.7 : 0.45);
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2.5 * s;
+    ctx.beginPath();
+    ctx.ellipse(cx, top, rx * (0.25 + 0.75 * q), ry * (0.25 + 0.75 * q), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.ellipse(cx, top + 2 * s, 34 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx - 92 * s, top + 4 * s, 22 * s, 6 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   private hpPips(ctx: CanvasRenderingContext2D, at: Vec, size: number, hp: number, max: number, s: number) {

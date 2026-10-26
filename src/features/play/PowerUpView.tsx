@@ -68,6 +68,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
                 <div className={styles.cardText}>
                   <span className={styles.cardTag} style={{ color: RarityStyle[patch.rarity].color }}>
                     {patchTag(patch)}
+                    {patch.stackable && run.patches.includes(patch.id) && " · +1 USE"}
                   </span>
                   <span className={styles.cardTitle}>{patch.title}</span>
                   <span className={styles.cardDesc}>{patch.description}</span>

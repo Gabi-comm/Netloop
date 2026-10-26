@@ -11,7 +11,7 @@ export type RunState = {
   uptime: number;
   maxUptime: number;
   patches: PatchId[];
-  killSwitchUsed: boolean;
+  killSwitchSpent: number;
   dataEarned: number;
   dropped: number;
   breaches: PacketKindId[];
@@ -31,7 +31,7 @@ export function createRun(stageId: number, seedOffset = 0): RunState {
     uptime: 3,
     maxUptime: 3,
     patches: [],
-    killSwitchUsed: false,
+    killSwitchSpent: 0,
     dataEarned: 0,
     dropped: 0,
     breaches: [],
@@ -43,6 +43,14 @@ export function createRun(stageId: number, seedOffset = 0): RunState {
 
 export function hasPatch(run: RunState, id: PatchId): boolean {
   return run.patches.includes(id);
+}
+
+export function patchCount(run: RunState, id: PatchId): number {
+  return run.patches.filter((p) => p === id).length;
+}
+
+export function killSwitchCharges(run: RunState): number {
+  return Math.max(0, patchCount(run, "killSwitch") - run.killSwitchSpent);
 }
 
 export const REROLL_BASE_COST = 10;
