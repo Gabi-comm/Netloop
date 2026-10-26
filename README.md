@@ -1,8 +1,5 @@
 # Netloop
 
-Draw a loop. Drop the bad packets.
-
-A hand-drawn firewall game for phone browsers, built with Next.js 16, TypeScript and an HTML canvas.
 
 ## Run
 
@@ -11,9 +8,7 @@ npm install
 npm run dev
 ```
 
-Open the printed URL, ideally in your browser's phone view (F12, then Ctrl+Shift+M). To try it on your phone, open the `Network:` URL while it's on the same Wi-Fi.
-
-`npm run build` must pass before you open a PR.
+`npm run build` 
 
 ## Folders
 
@@ -30,6 +25,4 @@ Open the printed URL, ideally in your browser's phone view (F12, then Ctrl+Shift
 | `src/data/stages.ts` | the 5 demo zones | Gab |
 | `public/sprites/` | SVG sprite frames and `preview.html` | shared |
 
-Work only inside your own folder, on a branch, and open a PR into `main`.
 
-Code has no comments. All docs live in the team's Obsidian vault (`Netloop — Hub`).
