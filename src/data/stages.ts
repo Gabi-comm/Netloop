@@ -18,6 +18,7 @@ export type Stage = {
   seed: number;
   reward: number;
   newThreats: PacketKindId[];
+  endless?: boolean;
   waves: [WaveDef, WaveDef, WaveDef];
 };
 

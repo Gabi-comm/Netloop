@@ -5,7 +5,7 @@ import { HoneypotIcon, PowerIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, UptimeBars } from "@/components/ui";
 import { GameEngine, type Hud } from "@/game/engine";
-import { PacketKinds, type PacketKindId } from "@/game/kinds";
+import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import type { RunState } from "@/game/runState";
 import { progressStore } from "@/lib/progress";
@@ -28,7 +28,7 @@ const SEGMENTS = 10;
 export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }: FightViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [engine] = useState(() => new GameEngine(run, progressStore.get().seen as PacketKindId[]));
+  const [engine] = useState(() => new GameEngine(run));
   const [hud, setHud] = useState<Hud>(() => engine.hud());
   const [comboBump, setComboBump] = useState(false);
   const lastCombo = useRef(hud.combo);

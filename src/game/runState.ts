@@ -16,6 +16,7 @@ export type RunState = {
   dropped: number;
   breaches: PacketKindId[];
   paidRerolls: number;
+  briefed: PacketKindId[];
   rng: Rng;
 };
 
@@ -35,6 +36,7 @@ export function createRun(stageId: number, seedOffset = 0): RunState {
     dropped: 0,
     breaches: [],
     paidRerolls: 0,
+    briefed: [],
     rng: createRng(stage.seed + seedOffset),
   };
 }

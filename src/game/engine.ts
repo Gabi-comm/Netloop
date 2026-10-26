@@ -86,7 +86,7 @@ export class GameEngine {
 
   constructor(run: RunState, known: Iterable<PacketKindId> = []) {
     this.run = run;
-    this.known = new Set(known);
+    this.known = new Set([...run.briefed, ...known]);
     this.layout = Layouts[run.stage.layout];
     this.score = run.score;
     this.uptime = run.uptime;
@@ -324,8 +324,9 @@ export class GameEngine {
 
   private spawn(s: Spawn) {
     const kind = PacketKinds[s.kind];
-    if (kind.codex && !this.known.has(kind.id)) {
+    if (kind.codex && !this.run.stage.endless && !this.known.has(kind.id)) {
       this.known.add(kind.id);
+      this.run.briefed.push(kind.id);
       this.briefings.push(kind.id);
     }
     const progress = s.progress ?? 0;
