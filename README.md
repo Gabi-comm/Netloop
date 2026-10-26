@@ -22,8 +22,8 @@ Open the printed URL, ideally in your browser's phone view (F12, then Ctrl+Shift
 | `src/features/home/` | main page | Gab |
 | `src/features/zones/` | zone map | Gab |
 | `src/features/play/` | fight, power-up, results | Gab |
-| `src/features/codex/` | Codex screen | Codex teammate |
-| `src/features/shop/` | Shop screen | Shop teammate |
+| `src/features/codex/` | Codex screen | earl |
+| `src/features/shop/` | Shop screen | earl |
 | `src/components/` | shared buttons, pills, sheet, icons, `<Sprite>` | shared |
 | `src/lib/progress.ts` | save data (data balance, stars, unlocks, inventory) | shared |
 | `src/game/` | engine, renderer, enemies, patches (no React) | Gab |
