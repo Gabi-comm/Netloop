@@ -115,10 +115,8 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
             "free reroll"
           )}
         </button>
-        {freeUsed && (
-          <span className={`${styles.rerollNote} ${canAfford ? "" : styles.rerollNoteShort}`}>
-            {canAfford ? `you have ${balance} data · price doubles each reroll` : `need ${cost} data · you have ${balance}`}
-          </span>
+        {freeUsed && !canAfford && (
+          <span className={`${styles.rerollNote} ${styles.rerollNoteShort}`}>need {cost} data · you have {balance}</span>
         )}
       </div>
       {showIntro && <PatchIntro onDismiss={() => progressStore.markSeen(PATCH_INTRO_TIP)} />}
