@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckIcon, DataIcon, RerollIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, DashedRule, UptimeBars } from "@/components/ui";
-import { offerPatches, patchTag, RarityStyle, type Patch } from "@/game/patches";
+import { offerPatches, patchSeenKey, patchTag, RarityStyle, type Patch } from "@/game/patches";
 import { rerollCost, type RunState } from "@/game/runState";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { PATCH_INTRO_TIP, PatchIntro } from "./PatchIntro";
@@ -21,6 +21,10 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
   const balance = hydrated ? progress.data : 0;
   const canAfford = !freeUsed || balance >= cost;
   const showIntro = hydrated && !progress.seen.includes(PATCH_INTRO_TIP);
+
+  useEffect(() => {
+    offers.forEach((patch) => progressStore.markSeen(patchSeenKey(patch.id)));
+  }, [offers]);
 
   const reroll = () => {
     if (freeUsed) {

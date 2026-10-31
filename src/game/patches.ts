@@ -31,6 +31,10 @@ export const Patches: Record<PatchId, Patch> = {
   killSwitch: { id: "killSwitch", title: "Kill Switch", rarity: "epic", isActive: true, stackable: true, description: "tap to drop every threat on screen. each copy is one use", icon: Sprites.patch_kill_switch },
 };
 
+export function patchSeenKey(id: PatchId): string {
+  return `patch:${id}`;
+}
+
 export function patchTag(patch: Patch): string {
   const label = RarityStyle[patch.rarity].label;
   return patch.isActive ? `${label} · ACTIVE` : label;
