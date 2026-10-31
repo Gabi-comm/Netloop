@@ -11,7 +11,7 @@ import { PATCH_INTRO_TIP, PatchIntro } from "./PatchIntro";
 import styles from "./play.module.css";
 
 export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (patch: Patch | null) => void }) {
-  const [offers, setOffers] = useState(() => offerPatches(run.patches, run.rng));
+  const [offers, setOffers] = useState(() => offerPatches(run.patches, run.rng, 3, progressStore.get().inventory));
   const [picked, setPicked] = useState<number | null>(null);
   const [freeUsed, setFreeUsed] = useState(false);
   const [, setPaid] = useState(run.paidRerolls);
@@ -34,7 +34,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
     } else {
       setFreeUsed(true);
     }
-    setOffers(offerPatches(run.patches, run.rng));
+    setOffers(offerPatches(run.patches, run.rng, 3, progressStore.get().inventory));
     setPicked(null);
   };
 

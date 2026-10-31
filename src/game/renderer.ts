@@ -1,6 +1,8 @@
 import { NetColors } from "./colors";
 import type { GameEngine } from "./engine";
 import { pointInPolygon, type Vec } from "./geometry";
+import { drawBitLine } from "./bitLine";
+import { Skins, type Skin } from "./skins";
 import { drawPop } from "./pops";
 import { allSpriteUrls, frameAt, spriteUrl, Sprites, type SpriteAnim } from "./sprites";
 
@@ -45,15 +47,21 @@ function makeDecor(seed: number): Decor[] {
 
 const SERVER_HIT_MS = 700;
 
+
 export class PlayfieldRenderer {
   private readonly sprites: SpriteCache;
   private readonly decor: Decor[];
   private displayFont = "cursive";
+  private skin: Skin = Skins.classic;
   private readonly tints = new Map<string, HTMLCanvasElement>();
 
   constructor(sprites: SpriteCache, seed: number) {
     this.sprites = sprites;
     this.decor = makeDecor(seed);
+  }
+
+  setSkin(skin: Skin) {
+    this.skin = skin;
   }
 
   setFont(family: string) {
@@ -139,7 +147,7 @@ export class PlayfieldRenderer {
     const serverAnim = hurt ? Sprites.server_hurt : engine.threatsNearServer ? Sprites.server_alert : Sprites.server_idle;
     if (sinceHit < SERVER_HIT_MS) this.serverHit(ctx, serverAnim, sinceHit, server, 96 * s, s);
     else this.sprite(ctx, serverAnim, now, { x: server.x, y: server.y }, 96 * s);
-    const bitAnim = hurt ? Sprites.bit_hurt : engine.drawing ? Sprites.bit_draw : Sprites.bit_idle;
+    const bitAnim = hurt ? this.skin.anims.hurt : engine.drawing ? this.skin.anims.draw : this.skin.anims.idle;
     this.sprite(ctx, bitAnim, hurt ? now - engine.serverHurtAtMs : now, { x: server.x - 92 * s, y: server.y + 22 * s }, 64 * s);
 
     const openLine = engine.drawing && engine.line.length > 6 ? engine.line : null;
@@ -163,15 +171,11 @@ export class PlayfieldRenderer {
     }
 
     if (engine.line.length > 1) {
-      ctx.strokeStyle = NetColors.chalk;
-      ctx.lineWidth = 6 * s;
-      ctx.beginPath();
-      engine.line.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-      ctx.stroke();
+      drawBitLine(ctx, engine.line, this.skin.line, s, now);
       this.sprite(ctx, Sprites.fx_snap_ring, now, engine.line[0], engine.snapRadius * 2.4);
     }
 
-    if (engine.pointer && engine.drawing) this.bandwidthRing(ctx, engine.pointer, engine.bandwidth, s);
+    if (engine.pointer && engine.drawing) this.bandwidthRing(ctx, engine.pointer, engine.bandwidth, s, this.skin.accent);
 
     for (const pop of engine.pops) drawPop(ctx, pop, now - pop.startMs, s, this.sprites.get(pop.anim, now - pop.startMs));
     for (const e of engine.effects) this.sprite(ctx, e.anim, now - e.startMs, e.at, e.size);
@@ -284,7 +288,7 @@ export class PlayfieldRenderer {
     }
   }
 
-  private bandwidthRing(ctx: CanvasRenderingContext2D, at: Vec, bandwidth: number, s: number) {
+  private bandwidthRing(ctx: CanvasRenderingContext2D, at: Vec, bandwidth: number, s: number, accent: string) {
     const r = 27 * s;
     const cx = at.x;
     const cy = at.y - 64 * s;
@@ -293,7 +297,7 @@ export class PlayfieldRenderer {
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.strokeStyle = bandwidth < 0.25 ? NetColors.threat : NetColors.data;
+    ctx.strokeStyle = bandwidth < 0.25 ? NetColors.threat : accent;
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, bandwidth));
     ctx.stroke();

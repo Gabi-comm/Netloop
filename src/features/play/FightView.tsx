@@ -9,6 +9,7 @@ import { waveFor } from "@/data/stages";
 import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import type { RunState } from "@/game/runState";
+import { skinById } from "@/game/skins";
 import { progressStore } from "@/lib/progress";
 import { BandwidthMeter } from "./BandwidthMeter";
 import { EnemyBriefing } from "./EnemyBriefing";
@@ -30,6 +31,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [engine] = useState(() => new GameEngine(run));
+  const [skin] = useState(() => skinById(progressStore.get().equippedSkin));
   const [hud, setHud] = useState<Hud>(() => engine.hud());
   const [comboBump, setComboBump] = useState(false);
   const lastCombo = useRef(hud.combo);
@@ -51,6 +53,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
     const renderer = new PlayfieldRenderer(sprites, run.stage.seed + run.wave);
     const font = getComputedStyle(document.documentElement).getPropertyValue("--font-gochi").trim();
     renderer.setFont(font ? `${font}, cursive` : "cursive");
+    renderer.setSkin(skin);
 
     const resize = () => {
       const rect = container.getBoundingClientRect();
@@ -89,7 +92,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("keydown", onKey);
     };
-  }, [engine, run, sprites]);
+  }, [engine, run, sprites, skin]);
 
   useEffect(() => {
     if (hud.phase === "cleared") {
@@ -193,7 +196,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
           </span>
         </div>
 
-        <BandwidthMeter value={hud.bandwidth} drawing={hud.drawing} />
+        <BandwidthMeter value={hud.bandwidth} drawing={hud.drawing} skin={skin} />
 
         <PatchStrip patches={run.patches} />
       </div>

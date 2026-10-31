@@ -15,7 +15,13 @@ export type SpriteName =
   | "ui_data" | "ui_uptime_full" | "ui_uptime_empty"
   | "patch_broadcast" | "patch_rate_limiter" | "patch_vpn_tunnel"
   | "patch_kill_switch" | "patch_kill_switch_used" | "patch_honeypot" | "patch_auto_patch"
-  | "env_cloud" | "env_grass" | "env_pebble";
+  | "patch_overclock" | "patch_wide_snap" | "patch_data_miner" | "patch_backup_server"
+  | "env_cloud" | "env_grass" | "env_pebble"
+  | BitSkinSpriteName;
+
+export const SkinIds = ["bubblegum", "sprout", "neon", "wizard", "royal"] as const;
+export type SkinSpriteId = (typeof SkinIds)[number];
+export type BitSkinSpriteName = `bit_${SkinSpriteId}_${"idle" | "draw" | "hurt"}`;
 
 export type SpriteAnim = {
   name: SpriteName;
@@ -60,10 +66,22 @@ const table: [SpriteName, number, number, boolean][] = [
   ["patch_kill_switch_used", 1, 0, false],
   ["patch_honeypot", 1, 0, false],
   ["patch_auto_patch", 1, 0, false],
+  ["patch_overclock", 1, 0, false],
+  ["patch_wide_snap", 1, 0, false],
+  ["patch_data_miner", 1, 0, false],
+  ["patch_backup_server", 1, 0, false],
   ["env_cloud", 1, 0, false],
   ["env_grass", 1, 0, false],
   ["env_pebble", 1, 0, false],
 ];
+
+const skinTable: [SpriteName, number, number, boolean][] = SkinIds.flatMap((id) => [
+  [`bit_${id}_idle`, 4, 220, true],
+  [`bit_${id}_draw`, 3, 120, true],
+  [`bit_${id}_hurt`, 2, 120, false],
+] as [SpriteName, number, number, boolean][]);
+
+table.push(...skinTable);
 
 export const Sprites = Object.fromEntries(
   table.map(([name, frames, frameMs, loop]) => [name, { name, frames, frameMs, loop }]),

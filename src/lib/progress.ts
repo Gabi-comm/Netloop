@@ -12,6 +12,7 @@ export type Progress = {
   lastCleared: number | null;
   inventory: string[];
   seen: string[];
+  equippedSkin: string;
   endless: EndlessRecord;
 };
 
@@ -19,7 +20,7 @@ export type EndlessRecord = { bestWaves: number; bestScore: number; runs: number
 
 const KEY = "netloop.progress.v1";
 
-const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [], endless: { bestWaves: 0, bestScore: 0, runs: 0 } };
+const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [], equippedSkin: "classic", endless: { bestWaves: 0, bestScore: 0, runs: 0 } };
 
 let current: Progress = EMPTY;
 let loaded = false;
@@ -125,6 +126,19 @@ export const progressStore = {
     const prev = getSnapshot();
     if (prev.inventory.includes(itemId)) return;
     save({ ...prev, inventory: [...prev.inventory, itemId] });
+  },
+
+  buyItem(itemId: string, price: number): boolean {
+    const prev = getSnapshot();
+    if (prev.inventory.includes(itemId) || prev.data < price) return false;
+    save({ ...prev, data: prev.data - price, inventory: [...prev.inventory, itemId] });
+    return true;
+  },
+
+  equipSkin(skinId: string) {
+    const prev = getSnapshot();
+    if (prev.equippedSkin === skinId) return;
+    save({ ...prev, equippedSkin: skinId });
   },
 
   markSeen(kindId: string) {

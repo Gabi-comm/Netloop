@@ -62,3 +62,18 @@ export function rerollCost(run: RunState): number {
 export function starsFor(run: RunState): number {
   return Math.max(1, Math.min(3, run.uptime));
 }
+
+export function dataMultiplier(run: RunState): number {
+  return hasPatch(run, "dataMiner") ? 1.25 : 1;
+}
+
+export function packetData(run: RunState): number {
+  return Math.round(run.dataEarned * dataMultiplier(run));
+}
+
+export function applyInstallEffects(run: RunState, id: PatchId) {
+  if (id === "backupServer") {
+    run.maxUptime += 1;
+    run.uptime += 1;
+  }
+}

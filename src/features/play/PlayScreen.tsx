@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { endlessReward } from "@/data/stages";
-import { createRun, starsFor, type RunState } from "@/game/runState";
+import { applyInstallEffects, createRun, packetData, starsFor, type RunState } from "@/game/runState";
 import { SpriteCache } from "@/game/renderer";
 import type { Patch } from "@/game/patches";
 import { isStageUnlocked, progressStore, useHydrated, useProgress } from "@/lib/progress";
@@ -17,9 +17,9 @@ type View = "fight" | "powerup" | "cleared" | "lost";
 function rewardFor(run: RunState): StageReward {
   const stars = starsFor(run);
   const stageReward = run.stage.reward;
-  const packetData = run.dataEarned;
+  const packetTotal = packetData(run);
   const starBonus = stars * 10;
-  return { stars, stageReward, packetData, starBonus, total: stageReward + packetData + starBonus };
+  return { stars, stageReward, packetData: packetTotal, starBonus, total: stageReward + packetTotal + starBonus };
 }
 
 export function PlayScreen({ stageId }: { stageId: number }) {
@@ -59,7 +59,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const onLost = useCallback(() => {
     if (run.stage.endless) {
       const survived = run.wave - 1;
-      const total = endlessReward(survived, run.dataEarned);
+      const total = endlessReward(survived, packetData(run));
       const previous = progressStore.recordEndless(survived, run.score, total);
       setEndlessResult({ survived, reward: total, previous });
     }
@@ -79,7 +79,10 @@ export function PlayScreen({ stageId }: { stageId: number }) {
 
   const onInstall = useCallback(
     (patch: Patch | null) => {
-      if (patch) run.patches.push(patch.id);
+      if (patch) {
+        run.patches.push(patch.id);
+        applyInstallEffects(run, patch.id);
+      }
       run.wave += 1;
       setView("fight");
     },
