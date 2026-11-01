@@ -13,7 +13,7 @@ import styles from "./shop.module.css";
 type TabId = "powerups" | "skins";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "powerups", label: "POWERUPS" },
+  { id: "powerups", label: "PATCHES" },
   { id: "skins", label: "SKINS" },
 ];
 
