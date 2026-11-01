@@ -69,7 +69,6 @@ export function InstallPrompt() {
           <img className={styles.icon} src="/icons/icon-192.png" width={60} height={60} alt="" />
           <div className={styles.names}>
             <h2 id="install-title" className={styles.title}>Add Netloop to your Home Screen</h2>
-            <p className={styles.sub}>play full screen, like a real app. works offline too.</p>
           </div>
         </div>
 

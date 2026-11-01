@@ -1,0 +1,294 @@
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px;
+  background: radial-gradient(120% 70% at 50% 42%, #1a1a19 0%, var(--ground) 70%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.leaving {
+  animation: leave 550ms cubic-bezier(0.64, 0, 0.78, 0) forwards;
+  pointer-events: none;
+}
+
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: translateY(-28px) scale(1.03);
+  }
+}
+
+.stage {
+  width: min(90vw, 400px);
+  height: auto;
+  overflow: visible;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes hide {
+  0%, 100% { opacity: 0; }
+}
+
+@keyframes show {
+  0%, 100% { opacity: 1; }
+}
+
+.cableBase {
+  opacity: 0;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawCable 650ms cubic-bezier(0.45, 0, 0.55, 1) 100ms forwards;
+}
+
+@keyframes drawCable {
+  from { stroke-dashoffset: 100; opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.cable {
+  opacity: 0;
+  animation:
+    fadeIn 300ms ease 650ms forwards,
+    flow 0.8s linear infinite,
+    cableAlarm 1350ms steps(1) 2600ms;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -26; }
+}
+
+@keyframes cableAlarm {
+  0%, 100% { stroke: #e8553d; }
+}
+
+.platform {
+  animation: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.ring {
+  animation:
+    rise 600ms cubic-bezier(0.22, 1, 0.36, 1) 80ms backwards,
+    ringAlarm 1350ms ease-in-out 2600ms,
+    ringFlash 600ms ease-out 3950ms;
+}
+
+@keyframes ringAlarm {
+  0%, 100% { stroke: #e8553d; opacity: 1; }
+  50% { stroke: #e8553d; opacity: 0.5; }
+}
+
+@keyframes ringFlash {
+  0% { stroke: #f2f2ec; stroke-width: 7px; }
+  100% { stroke: #5fd3e0; stroke-width: 4px; }
+}
+
+.pulse {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulseOut 900ms ease-out 4100ms;
+}
+
+@keyframes pulseOut {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.4); }
+}
+
+.rack {
+  animation: rise 600ms cubic-bezier(0.22, 1, 0.36, 1) 150ms backwards;
+}
+
+.led {
+  fill: #2a3a63;
+  animation:
+    ledBoot 200ms steps(1) calc(1450ms + var(--i) * 120ms) forwards,
+    ledAlarm 1350ms linear 2600ms;
+}
+
+@keyframes ledBoot {
+  to { fill: #8ad15b; }
+}
+
+@keyframes ledAlarm {
+  0%, 20%, 40%, 60%, 80% { fill: #e8553d; }
+  10%, 30%, 50%, 70%, 90% { fill: #5a1d14; }
+  100% { fill: #e8553d; }
+}
+
+.faceCalm {
+  animation: hide 1350ms 2600ms;
+}
+
+.faceAlarm {
+  opacity: 0;
+  animation: show 1350ms 2600ms;
+}
+
+.alarm {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: alarmPop 1350ms ease-out 2600ms;
+}
+
+@keyframes alarmPop {
+  0% { opacity: 0; transform: scale(0.3); }
+  12% { opacity: 1; transform: scale(1.15); }
+  20% { transform: scale(1) rotate(0); }
+  30% { transform: rotate(-10deg); }
+  40% { transform: rotate(10deg); }
+  50% { transform: rotate(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+.shadow {
+  opacity: 0;
+  animation:
+    landShadow 200ms ease-out var(--land) forwards,
+    hide 1ms 3950ms forwards;
+}
+
+@keyframes landShadow {
+  to { opacity: 0.4; }
+}
+
+.invader {
+  animation:
+    squash 320ms ease-out var(--land),
+    wobble 380ms ease-in-out calc(var(--land) + 320ms) infinite alternate,
+    pop 260ms ease-in 3950ms forwards;
+}
+
+@keyframes squash {
+  0% { transform: scale(1.25, 0.7); }
+  60% { transform: scale(0.92, 1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wobble {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg) scale(1.04, 0.96); }
+}
+
+@keyframes pop {
+  40% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0.1); opacity: 0; }
+}
+
+.burst {
+  opacity: 0;
+  transform-origin: 0 -14px;
+  animation: burst 650ms ease-out 4000ms;
+}
+
+@keyframes burst {
+  0% { opacity: 1; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+.bit {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation:
+    hop 520ms cubic-bezier(0.22, 1, 0.36, 1) 2900ms backwards,
+    bob 1.4s ease-in-out 3420ms infinite;
+}
+
+@keyframes hop {
+  0% { opacity: 0; transform: translate(-60px, 0) scale(0.8); }
+  50% { opacity: 1; transform: translate(-24px, -26px) scale(1); }
+  100% { transform: none; }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.loop {
+  opacity: 0;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation:
+    draw 720ms cubic-bezier(0.45, 0, 0.55, 1) 3200ms forwards,
+    snap 420ms ease-out 3950ms forwards;
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 100; opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes snap {
+  0% { stroke-dashoffset: 0; opacity: 1; stroke: #ede06a; }
+  100% { stroke-dashoffset: 0; opacity: 0; stroke: #ede06a; }
+}
+
+.plus {
+  opacity: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  fill: var(--points);
+  animation: plus 950ms ease-out 4000ms;
+}
+
+@keyframes plus {
+  0% { opacity: 0; transform: translateY(10px); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-24px); }
+}
+
+.title {
+  display: flex;
+  font-family: var(--font-display);
+  font-size: clamp(54px, 17vw, 88px);
+  line-height: 1;
+  letter-spacing: 4px;
+  color: var(--chalk);
+}
+
+.letter {
+  display: inline-block;
+  animation: stamp 460ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.net {
+  color: var(--pink);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--pink) 45%, transparent);
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.6) rotate(-8deg);
+  }
+}
+
+.rule {
+  width: min(240px, 60vw);
+  border-top: 3px dashed var(--line-strong);
+  transform: scaleX(0);
+  animation: grow 500ms cubic-bezier(0.22, 1, 0.36, 1) 4950ms forwards;
+}
+
+@keyframes grow {
+  to { transform: scaleX(1); }
+}

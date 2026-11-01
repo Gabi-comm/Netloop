@@ -9,6 +9,7 @@ import { getStage, Stages } from "@/data/stages";
 import { skinById } from "@/game/skins";
 import { clearedCount, nextStageId, progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { HeroScene } from "./HeroScene";
+import { Intro } from "./Intro";
 import styles from "./home.module.css";
 
 function Hex({ color, children }: { color: string; children: ReactNode }) {
@@ -65,6 +66,7 @@ export function HomeScreen() {
   return (
     <Screen fit doodles={false}>
       <HomeBackdrop />
+      <Intro />
       <div className={styles.top}>
         <DataPill />
         <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
@@ -133,11 +135,13 @@ export function HomeScreen() {
         </Link>
       </nav>
 
-      <p className={styles.ticker}>
-        <span className={styles.tickerDot} aria-hidden="true" />
-        <span className={styles.tickerLabel}>{allCleared ? "STATUS" : "NEXT UP"}</span>
-        <span className={styles.tickerText}>{hint}</span>
-      </p>
+      {!allCleared && (
+        <p className={styles.ticker}>
+          <span className={styles.tickerDot} aria-hidden="true" />
+          <span className={styles.tickerLabel}>NEXT UP</span>
+          <span className={styles.tickerText}>{hint}</span>
+        </p>
+      )}
 
       <Sheet open={settingsOpen} onClose={() => setSettingsOpen(false)} label="Settings">
         <h2 className={styles.sheetTitle}>SETTINGS</h2>
