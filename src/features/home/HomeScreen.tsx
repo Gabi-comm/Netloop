@@ -99,39 +99,25 @@ export function HomeScreen() {
           <Hex color="var(--data)">
             <ZonesIcon size={26} />
           </Hex>
-          <span className={styles.tileText}>
-            <span className={styles.tileTitle}>ZONES</span>
-            <span className={styles.tileSub}>{hydrated ? `${cleared}/${Stages.length} secured` : " "}</span>
-          </span>
+          <span className={styles.tileTitle}>ZONES</span>
         </Link>
         <Link href="/codex" className={styles.tile}>
           <Hex color="var(--points)">
             <CodexIcon size={26} />
           </Hex>
-          <span className={styles.tileText}>
-            <span className={styles.tileTitle}>CODEX</span>
-            <span className={styles.tileSub}>threat book</span>
-          </span>
+          <span className={styles.tileTitle}>CODEX</span>
         </Link>
         <Link href="/shop" className={styles.tile}>
           <Hex color="var(--pink)">
             <ShopIcon size={26} />
           </Hex>
-          <span className={styles.tileText}>
-            <span className={styles.tileTitle}>SHOP</span>
-            <span className={styles.tileSub}>skins &amp; gear</span>
-          </span>
+          <span className={styles.tileTitle}>SHOP</span>
         </Link>
         <Link href="/endless" className={styles.tile} aria-label="Endless mode, The Cloud">
           <Hex color="var(--epic-light)">
             <CloudIcon size={26} color="var(--epic-light)" />
           </Hex>
-          <span className={styles.tileText}>
-            <span className={styles.tileTitle}>ENDLESS</span>
-            <span className={styles.tileSub}>
-              {hydrated && progress.endless.runs > 0 ? `best ${progress.endless.bestWaves} ${progress.endless.bestWaves === 1 ? "wave" : "waves"}` : "the cloud"}
-            </span>
-          </span>
+          <span className={styles.tileTitle}>ENDLESS</span>
         </Link>
       </nav>
 
