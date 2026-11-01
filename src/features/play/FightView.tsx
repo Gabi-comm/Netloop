@@ -252,7 +252,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
       <div className={styles.banner} key={`banner-${run.wave}`}>
         <h2 className={styles.bannerTitle}>WAVE {run.wave}</h2>
-        <span className={styles.bannerSub}>{run.wave === 1 ? run.stage.tagline : run.wave === run.maxWaves ? "final wave!" : "keep the server up"}</span>
+        {run.wave > 1 && <span className={styles.bannerSub}>{run.wave === run.maxWaves ? "final wave!" : "keep the server up"}</span>}
         {featured.length > 0 && (
           <div className={styles.newRow}>
             {featured.map((id) => (
