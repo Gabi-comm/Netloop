@@ -1,10 +1,10 @@
-import { stageIntroductions, waveFor } from "@/data/stages";
+import { stageIntroductions } from "@/data/stages";
 import { NetColors } from "./colors";
 import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec } from "./geometry";
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
 import { buildCables, Layouts, type Cable, type NetworkLayout } from "./network";
 import { POP_MS, type Pop } from "./pops";
-import { hasPatch, killSwitchCharges, type RunState } from "./runState";
+import { currentWave, hasPatch, killSwitchCharges, type RunState } from "./runState";
 import { durationMs, Sprites, type SpriteAnim } from "./sprites";
 import { buildWave, threatCount, type Spawn } from "./wavePlan";
 
@@ -96,7 +96,7 @@ export class GameEngine {
     this.score = run.score;
     this.uptime = run.uptime;
     this.vpnCharge = hasPatch(run, "vpnTunnel");
-    const def = waveFor(run.stage, run.wave);
+    const def = currentWave(run);
     this.spawns = buildWave(def, this.layout.routes.length, run.rng);
     this.speed = def.speed ?? 1;
     this.totalThreats = Math.max(1, threatCount(this.spawns));

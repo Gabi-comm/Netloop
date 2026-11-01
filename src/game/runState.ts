@@ -1,4 +1,4 @@
-import { getStage, WAVES_PER_STAGE, type Stage } from "@/data/stages";
+import { endlessWave, getStage, stageThreats, WAVES_PER_STAGE, type Stage, type WaveDef } from "@/data/stages";
 import type { PacketKindId } from "./kinds";
 import type { PatchId } from "./patches";
 import { createRng, type Rng } from "./random";
@@ -18,11 +18,38 @@ export type RunState = {
   paidRerolls: number;
   briefed: PacketKindId[];
   rng: Rng;
+  waves: WaveDef[];
 };
 
-export function createRun(stageId: number, seedOffset = 0): RunState {
+export function randomSeed(): number {
+  return (Math.random() * 2 ** 32) >>> 0;
+}
+
+export function rollWaves(stage: Stage, rng: Rng): WaveDef[] {
+  if (stage.endless) return [];
+  const pool = stageThreats(stage);
+  return stage.waves.map((base, i) => {
+    const featured = base.featured ?? [];
+    const size = Math.min(pool.length, 2 + i + rng.int(2));
+    const picks = new Set<PacketKindId>(featured);
+    for (const id of rng.shuffle(pool)) {
+      if (picks.size >= Math.max(size, featured.length)) break;
+      picks.add(id);
+    }
+    const mix: WaveDef["mix"] = {};
+    for (const id of picks) mix[id] = 1 + rng.int(3);
+    return { ...base, mix };
+  });
+}
+
+export function currentWave(run: RunState): WaveDef {
+  return run.stage.endless ? endlessWave(run.wave) : run.waves[run.wave - 1];
+}
+
+export function createRun(stageId: number, seed = randomSeed()): RunState {
   const stage = getStage(stageId);
   if (!stage) throw new Error(`unknown stage ${stageId}`);
+  const rng = createRng(seed);
   return {
     stage,
     wave: 1,
@@ -37,7 +64,8 @@ export function createRun(stageId: number, seedOffset = 0): RunState {
     breaches: [],
     paidRerolls: 0,
     briefed: [],
-    rng: createRng(stage.seed + seedOffset),
+    rng,
+    waves: rollWaves(stage, rng),
   };
 }
 

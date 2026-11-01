@@ -48,7 +48,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
 
   const restart = useCallback(() => {
     setAttempt((a) => a + 1);
-    setRun(createRun(stageId, attempt + 1));
+    setRun(createRun(stageId));
     setReward(null);
     setEndlessResult(null);
     setView("fight");

@@ -151,10 +151,6 @@ export function getStage(id: number): Stage | undefined {
   return id === ENDLESS_ID ? EndlessStage : Stages.find((s) => s.id === id);
 }
 
-export function waveFor(stage: Stage, wave: number): WaveDef {
-  return stage.endless ? endlessWave(wave) : stage.waves[wave - 1];
-}
-
 export function endlessReward(wavesSurvived: number, dataEarned: number): number {
   return wavesSurvived * 8 + dataEarned;
 }

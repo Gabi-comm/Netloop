@@ -5,10 +5,9 @@ import { HoneypotIcon, PowerIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, UptimeBars } from "@/components/ui";
 import { GameEngine, type Hud } from "@/game/engine";
-import { waveFor } from "@/data/stages";
 import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
-import type { RunState } from "@/game/runState";
+import { currentWave, type RunState } from "@/game/runState";
 import { skinById } from "@/game/skins";
 import { progressStore } from "@/lib/progress";
 import { BandwidthMeter } from "./BandwidthMeter";
@@ -141,7 +140,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   const onPointerUp = () => engine.endLine();
 
   const endless = Boolean(run.stage.endless);
-  const def = waveFor(run.stage, run.wave);
+  const def = currentWave(run);
   const featured = run.wave === 1 && !endless ? run.stage.newThreats : (def.featured ?? []);
   const where = endless ? "endless" : `zone ${run.stage.id}`;
   const lit = Math.round(hud.waveProgress * SEGMENTS);
