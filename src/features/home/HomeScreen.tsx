@@ -117,7 +117,12 @@ export function HomeScreen() {
           <Hex color="var(--epic-light)">
             <CloudIcon size={26} color="var(--epic-light)" />
           </Hex>
-          <span className={styles.tileTitle}>ENDLESS</span>
+          <span className={styles.tileText}>
+            <span className={styles.tileTitle}>ENDLESS</span>
+            {hydrated && progress.endless.bestScore > 0 && (
+              <span className={styles.tileBest}>best {progress.endless.bestScore.toLocaleString()}</span>
+            )}
+          </span>
         </Link>
       </nav>
 

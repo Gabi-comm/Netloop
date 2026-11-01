@@ -31,7 +31,10 @@ function load() {
   loaded = true;
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (raw) current = { ...EMPTY, ...(JSON.parse(raw) as Partial<Progress>), version: 1 };
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<Progress>;
+      current = { ...EMPTY, ...parsed, endless: { ...EMPTY.endless, ...parsed.endless }, version: 1 };
+    }
   } catch {
     current = EMPTY;
   }

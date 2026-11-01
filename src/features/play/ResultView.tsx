@@ -87,7 +87,8 @@ export type EndlessResult = { survived: number; reward: number; previous: Endles
 
 export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunState; endless?: EndlessResult; onRetry: () => void; onQuit: () => void }) {
   const breaches = groupBreaches(run.breaches);
-  const newBest = endless !== undefined && endless.survived > endless.previous.bestWaves && endless.survived > 0;
+  const newBest = endless !== undefined && run.score > endless.previous.bestScore && run.score > 0;
+  const highScore = endless ? Math.max(run.score, endless.previous.bestScore) : 0;
   return (
     <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
@@ -102,10 +103,23 @@ export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunSta
       </div>
 
       <div className={styles.resultArt}>
-        <BitShutdown size={breaches.length ? 92 : 120} />
+        <BitShutdown size={breaches.length && !endless ? 92 : 120} />
       </div>
 
-      {breaches.length > 0 && (
+      {endless && (
+        <div className={styles.scorePair}>
+          <div className={styles.scoreCard}>
+            <span className={styles.scoreCardLabel}>score</span>
+            <span className={styles.scoreCardValue}>{run.score.toLocaleString()}</span>
+          </div>
+          <div className={`${styles.scoreCard} ${styles.scoreCardHigh}`}>
+            <span className={styles.scoreCardLabel}>high score</span>
+            <span className={styles.scoreCardValue}>{highScore.toLocaleString()}</span>
+          </div>
+        </div>
+      )}
+
+      {!endless && breaches.length > 0 && (
         <section className={styles.breaches} aria-labelledby="breaches-title">
           <h2 id="breaches-title" className={styles.breachesTitle}>WHAT GOT IN</h2>
           <ul className={styles.breachList}>
@@ -130,39 +144,24 @@ export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunSta
         </section>
       )}
 
-      <div className={styles.statRow}>
-        <div className={styles.stat}>
-          <span className={styles.statValue}>{run.score.toLocaleString()}</span>
-          <span className={styles.statLabel}>score</span>
+      {!endless && (
+        <div className={styles.statRow}>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{run.score.toLocaleString()}</span>
+            <span className={styles.statLabel}>score</span>
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{run.dropped}</span>
+            <span className={styles.statLabel}>threats dropped</span>
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.statValue}>{run.stage.id}/{Stages.length}</span>
+            <span className={styles.statLabel}>zone</span>
+          </div>
         </div>
-        {endless ? (
-          <>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{Math.max(endless.survived, endless.previous.bestWaves)}</span>
-              <span className={styles.statLabel}>best waves</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={`${styles.statValue} ${styles.statData}`}>
-                <DataIcon size={18} />+{endless.reward}
-              </span>
-              <span className={styles.statLabel}>data earned</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{run.dropped}</span>
-              <span className={styles.statLabel}>threats dropped</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{run.stage.id}/{Stages.length}</span>
-              <span className={styles.statLabel}>zone</span>
-            </div>
-          </>
-        )}
-      </div>
+      )}
 
-      {breaches.length === 0 && (
+      {!endless && breaches.length === 0 && (
         <p className={styles.pageSub} style={{ fontSize: 19, color: "var(--muted)" }}>
           tip: big loops catch swarms, but never loop a green packet.
         </p>

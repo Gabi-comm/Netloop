@@ -31,6 +31,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [engine] = useState(() => new GameEngine(run));
   const [skin] = useState(() => skinById(progressStore.get().equippedSkin));
+  const [bestScore] = useState(() => progressStore.get().endless.bestScore);
   const [hud, setHud] = useState<Hud>(() => engine.hud());
   const [comboBump, setComboBump] = useState(false);
   const lastCombo = useRef(hud.combo);
@@ -186,6 +187,13 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
         <div className={styles.scoreBlock} aria-live="polite">
           <span className={styles.score}>{hud.score.toLocaleString()}</span>
           <span className={styles.scoreLabel}>score</span>
+          {endless && bestScore > 0 && (
+            hud.score > bestScore ? (
+              <span className={`${styles.bestChip} ${styles.bestChipBeat}`}>NEW BEST!</span>
+            ) : (
+              <span className={styles.bestChip}>best {bestScore.toLocaleString()}</span>
+            )
+          )}
         </div>
 
         <div className={styles.hudRow}>
