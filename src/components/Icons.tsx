@@ -124,3 +124,11 @@ export function PowerIcon({ size = 34, color = "var(--threat)" }: IconProps) {
     </svg>
   );
 }
+
+export function CloudIcon({ size = 32, color = "var(--data)" }: IconProps) {
+  return (
+    <svg aria-hidden="true" width={size} height={(size * 30) / 32} viewBox="0 0 32 30" fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 23 Q2 23 3 17 Q4 12 9 13 Q10 6 17 6 Q24 6 25 13 Q30 13 30 18 Q30 23 24 23 Z" />
+    </svg>
+  );
+}
