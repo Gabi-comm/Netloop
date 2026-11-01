@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { holdForIntro, releaseIntro } from "@/lib/introGate";
 import styles from "./intro.module.css";
 
 const INTRO_MS = 6200;
@@ -48,7 +49,10 @@ function Malware() {
 }
 
 export function Intro() {
-  const [show, setShow] = useState(() => !played);
+  const [show, setShow] = useState(() => {
+    if (!played && typeof window !== "undefined") holdForIntro(INTRO_MS);
+    return !played;
+  });
   const [leaving, setLeaving] = useState(false);
   const cable = useRef<SVGPathElement>(null);
   const packets = useRef<(SVGGElement | null)[]>([]);
@@ -59,6 +63,7 @@ export function Intro() {
     if (!show) return;
     played = true;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      releaseIntro();
       setShow(false);
       return;
     }
@@ -107,7 +112,7 @@ export function Intro() {
         <ellipse cx="150" cy="188" rx="104" ry="25" fill="none" stroke="#5fd3e0" strokeWidth="3" className={styles.pulse} />
 
         <g className={styles.rack}>
-          <path d="M240 98 Q240 92 248 92 L280 92 Q288 92 288 98 L288 194 L240 194 Z" fill="#3b6fd4" />
+          <path d="M240 78 Q240 70 248 70 L280 70 Q288 70 288 78 L288 194 L240 194 Z" fill="#3b6fd4" />
           {[0, 1, 2, 3].map((u) => (
             <g key={u} transform={`translate(244 ${100 + u * 23})`}>
               <path d="M0 2 Q0 0 3 0 L37 0 Q40 0 40 2 L40 17 Q40 19 37 19 L3 19 Q0 19 0 17 Z" fill="#6f8fe0" />
@@ -118,8 +123,8 @@ export function Intro() {
           <path className={styles.faceCalm} d="M252 84 Q256 80 260 84 M268 84 Q272 80 276 84" stroke="#121212" strokeWidth="3" fill="none" strokeLinecap="round" />
           <path className={styles.faceAlarm} d="M252 80 L260 84 M276 80 L268 84" stroke="#121212" strokeWidth="3" fill="none" strokeLinecap="round" />
           <g className={styles.alarm}>
-            <circle cx="290" cy="70" r="11" fill="#e8553d" />
-            <path d="M290 63 L290 71 M290 76 L290 76.5" stroke="#121212" strokeWidth="3.4" strokeLinecap="round" />
+            <circle cx="292" cy="58" r="11" fill="#e8553d" />
+            <path d="M292 51 L292 59 M292 64 L292 64.5" stroke="#121212" strokeWidth="3.4" strokeLinecap="round" />
           </g>
         </g>
 

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { introRemainingMs } from "@/lib/introGate";
 import styles from "./installPrompt.module.css";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -9,6 +10,7 @@ type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{
 type Mode = "native" | "ios" | "manual";
 
 const SHOW_DELAY_MS = 1200;
+const AFTER_INTRO_MS = 600;
 
 function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -38,7 +40,8 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     if (isIos()) setMode("ios");
-    const t = window.setTimeout(() => setOpen(true), SHOW_DELAY_MS);
+    const intro = introRemainingMs();
+    const t = window.setTimeout(() => setOpen(true), intro ? intro + AFTER_INTRO_MS : SHOW_DELAY_MS);
     return () => {
       window.clearTimeout(t);
       window.removeEventListener("beforeinstallprompt", onPrompt);
