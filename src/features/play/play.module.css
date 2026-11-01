@@ -576,9 +576,23 @@
   position: absolute;
   inset: 0;
   border-radius: 6px;
-  background: var(--data);
+  background: var(--bw, var(--data));
   transform-origin: left center;
   transition: transform 120ms linear, background-color 200ms ease;
+}
+
+.bandwidth[data-line="neon"] .bandwidthFill,
+.bandwidth[data-line="stars"] .bandwidthFill {
+  box-shadow: 0 0 10px var(--bw);
+}
+
+.bandwidth[data-line="ribbon"] .bandwidthFill {
+  box-shadow: inset 0 -4px 0 var(--bw-edge);
+}
+
+.bandwidth[data-line="vine"] .bandwidthTrack,
+.bandwidth[data-line="beads"] .bandwidthTrack {
+  border: 2px dashed var(--bw-edge);
 }
 
 .bandwidthLow {

@@ -103,7 +103,7 @@ export class GameEngine {
   }
 
   get snapRadius(): number {
-    return 30 * this.scale;
+    return 30 * this.scale * (hasPatch(this.run, "wideSnap") ? 1.4 : 1);
   }
 
   get isFrozen(): boolean {
@@ -239,7 +239,7 @@ export class GameEngine {
 
     for (const trojan of opened) this.releaseTrojan(trojan);
 
-    if (!this.drawing) this.bandwidth = Math.min(1, this.bandwidth + 0.35 * dt);
+    if (!this.drawing) this.bandwidth = Math.min(1, this.bandwidth + 0.35 * (hasPatch(this.run, "overclock") ? 1.5 : 1) * dt);
     this.prune(this.effects, (e) => this.clockMs - e.startMs > Math.max(durationMs(e.anim), 200));
     this.prune(this.pops, (p) => this.clockMs - p.startMs > POP_MS);
     this.prune(this.popups, (p) => this.clockMs - p.startMs > (p.big ? 1400 : 900));

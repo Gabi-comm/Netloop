@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import type { Skin } from "@/game/skins";
 import styles from "./play.module.css";
 
 const LOW = 0.25;
 
-export function BandwidthMeter({ value, drawing }: { value: number; drawing: boolean }) {
+export function BandwidthMeter({ value, drawing, skin }: { value: number; drawing: boolean; skin?: Skin }) {
   const full = value >= 0.999;
   const low = value < LOW;
   const recharging = !drawing && !full;
@@ -27,6 +28,8 @@ export function BandwidthMeter({ value, drawing }: { value: number; drawing: boo
   return (
     <div
       className={styles.bandwidth}
+      data-line={skin?.line.kind}
+      style={skin ? ({ "--bw": skin.accent, "--bw-edge": skin.line.edge } as CSSProperties) : undefined}
       role="meter"
       aria-label="bandwidth"
       aria-valuemin={0}
