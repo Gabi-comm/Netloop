@@ -140,10 +140,6 @@ export function HomeScreen() {
           <span>sound</span>
           <Soon />
         </div>
-        <div className={styles.settingsRow}>
-          <span>haptics</span>
-          <Soon />
-        </div>
         <ChunkyButton
           tone="ghost"
           size="small"
