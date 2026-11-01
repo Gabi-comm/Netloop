@@ -32,14 +32,6 @@
   color: var(--chalk);
 }
 
-.note {
-  margin: 0;
-  text-align: center;
-  font-size: 19px;
-  line-height: 1.25;
-  color: var(--muted);
-}
-
 .toast {
   margin: -6px 0 -4px;
   min-height: 24px;

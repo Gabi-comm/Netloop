@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LockIcon, PlayIcon, StarIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyLink, DataPill, Screen, Sheet, TopBar } from "@/components/ui";
 import { Stages, stageThreats, WAVES_PER_STAGE, type Stage } from "@/data/stages";
 import { PacketKinds } from "@/game/kinds";
 import { clearedCount, isStageUnlocked, nextStageId, progressStore, useHydrated, useProgress, type Progress } from "@/lib/progress";
+import { ZoneBadge, ZoneScene } from "./ZoneScenes";
 import styles from "./zones.module.css";
 
 type NodeState = "locked" | "open" | "cleared";
@@ -26,22 +27,47 @@ function Stars({ count, size = 18 }: { count: number; size?: number }) {
   );
 }
 
-function Connector({ fromLeft, lit, animate }: { fromLeft: boolean; lit: boolean; animate: boolean }) {
-  const d = fromLeft ? "M45 0 C45 40 255 30 255 70" : "M255 0 C255 40 45 30 45 70";
+type Point = { x: number; y: number; r: number };
+
+function Trail({ points, litUntil, reveal }: { points: Point[]; litUntil: number; reveal: number | null }) {
+  if (points.length < 2) return null;
+  const seg = (a: Point, b: Point) => {
+    const y1 = a.y + a.r + 10;
+    const y2 = b.y - b.r - 10;
+    const h = y2 - y1;
+    return { start: `M${a.x} ${y1}`, curve: `C${a.x} ${y1 + h * 0.75} ${b.x} ${y2 - h * 0.75} ${b.x} ${y2}` };
+  };
+  const pieces = points.slice(1).map((b, i) => {
+    const { start, curve } = seg(points[i], b);
+    return { i, d: `${start} ${curve}`, lit: i + 1 <= litUntil };
+  });
+  const litPath = litUntil > 0 ? pieces.slice(0, litUntil).map((p) => p.d).join(" ") : null;
   return (
-    <svg aria-hidden="true" className={styles.connector} viewBox="0 0 300 70" preserveAspectRatio="none">
-      <path d={d} fill="none" stroke="var(--line)" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" vectorEffect="non-scaling-stroke" />
-      {lit && (
+    <svg aria-hidden="true" className={styles.trail}>
+      {pieces.map((p) => (
+        <path key={`b${p.i}`} d={p.d} fill="none" stroke="#0b0b0b" strokeOpacity="0.85" strokeWidth="11" strokeLinecap="round" />
+      ))}
+      {pieces.map((p) => (
         <path
-          d={d}
-          pathLength={100}
-          className={animate ? styles.connectorDraw : undefined}
+          key={`d${p.i}`}
+          d={p.d}
           fill="none"
-          stroke="var(--chalk)"
-          strokeWidth="4"
+          stroke={p.lit ? "var(--chalk)" : "var(--line-strong)"}
+          strokeWidth="3.5"
           strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
+          strokeDasharray="9 9"
+          className={`${p.lit ? styles.trailFlow : ""} ${reveal === p.i + 1 ? styles.trailReveal : ""}`}
         />
+      ))}
+      {litPath && (
+        <g>
+          <circle r="9" fill="var(--data)" opacity="0.25">
+            <animateMotion dur={`${1.6 + litUntil * 1.1}s`} repeatCount="indefinite" path={litPath} />
+          </circle>
+          <circle r="4.5" fill="var(--data)">
+            <animateMotion dur={`${1.6 + litUntil * 1.1}s`} repeatCount="indefinite" path={litPath} />
+          </circle>
+        </g>
       )}
     </svg>
   );
@@ -52,6 +78,29 @@ export function ZonesScreen() {
   const hydrated = useHydrated();
   const [selected, setSelected] = useState<Stage | null>(null);
   const [celebrate, setCelebrate] = useState<number | null>(null);
+  const [points, setPoints] = useState<Point[]>([]);
+  const worldRef = useRef<HTMLDivElement>(null);
+  const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const scrolled = useRef(false);
+
+  useLayoutEffect(() => {
+    const world = worldRef.current;
+    if (!world) return;
+    const measure = () => {
+      const box = world.getBoundingClientRect();
+      setPoints(
+        nodeRefs.current.flatMap((el) => {
+          if (!el) return [];
+          const r = el.getBoundingClientRect();
+          return [{ x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2, r: el.offsetWidth / 2 }];
+        }),
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(world);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const id = progressStore.consumeLastCleared();
@@ -66,7 +115,14 @@ export function ZonesScreen() {
 
   const cleared = clearedCount(progress);
   const current = nextStageId(progress);
+
+  useEffect(() => {
+    if (!hydrated || scrolled.current) return;
+    scrolled.current = true;
+    if (current > 2) nodeRefs.current[current - 1]?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [hydrated, current]);
   const unlockedByCelebration = celebrate !== null && celebrate < Stages.length ? celebrate + 1 : null;
+  const litUntil = Stages.reduce((n, stage, i) => (i > 0 && isStageUnlocked(progress, stage.id) ? i : n), 0);
 
   return (
     <Screen>
@@ -85,37 +141,53 @@ export function ZonesScreen() {
         </div>
       )}
 
-      <ol className={styles.map}>
-        {Stages.map((stage, index) => {
-          const state = hydrated ? nodeState(progress, stage) : stage.id === 1 ? "open" : "locked";
-          const record = progress.stages[stage.id];
-          const left = index % 2 === 0;
-          const isCurrent = hydrated && state === "open" && stage.id === current;
-          const popping = celebrate === stage.id || unlockedByCelebration === stage.id;
-          const next = Stages[index + 1];
-          const nextLit = hydrated && next ? isStageUnlocked(progress, next.id) : false;
-          return (
-            <li key={stage.id} className={styles.row}>
-              <div className={`${styles.stop} ${left ? styles.left : styles.right}`}>
-                <button
-                  type="button"
-                  className={`${styles.node} ${styles[state]} ${isCurrent ? styles.current : ""} ${popping ? styles.pop : ""}`}
-                  onClick={() => setSelected(stage)}
-                  aria-label={`Zone ${stage.id}, ${stage.name}, ${state === "locked" ? "locked" : state === "cleared" ? "cleared" : "ready"}`}
-                >
-                  {state === "locked" ? <LockIcon size={28} /> : <span className={styles.nodeNumber}>{stage.id}</span>}
-                </button>
-                <div className={styles.label}>
-                  <span className={styles.labelName}>{stage.name}</span>
-                  <span className={styles.labelPlace}>{stage.place}</span>
-                  {state === "cleared" && record ? <Stars count={record.stars} /> : isCurrent ? <span className={styles.nextTag}>next up</span> : null}
+      <div className={styles.world} ref={worldRef}>
+        <Trail points={points} litUntil={hydrated ? litUntil : 0} reveal={unlockedByCelebration ? unlockedByCelebration - 1 : null} />
+        <ol className={styles.map}>
+          {Stages.map((stage, index) => {
+            const state = hydrated ? nodeState(progress, stage) : stage.id === 1 ? "open" : "locked";
+            const record = progress.stages[stage.id];
+            const left = index % 2 === 0;
+            const isCurrent = hydrated && state === "open" && stage.id === current;
+            const popping = celebrate === stage.id || unlockedByCelebration === stage.id;
+            return (
+              <li
+                key={stage.id}
+                className={`${styles.scene} ${state === "locked" ? styles.sceneLocked : ""} ${left ? styles.sceneFromLeft : styles.sceneFromRight}`}
+                style={{ animationDelay: `${index * 90}ms` }}
+              >
+                <ZoneScene layout={stage.layout} />
+                <div className={`${styles.shade} ${left ? styles.shadeLeft : styles.shadeRight}`} />
+                <div className={`${styles.stop} ${left ? styles.left : styles.right}`}>
+                  <button
+                    type="button"
+                    ref={(el) => {
+                      nodeRefs.current[index] = el;
+                    }}
+                    className={`${styles.node} ${styles[state]} ${isCurrent ? styles.current : ""} ${popping ? styles.pop : ""}`}
+                    onClick={() => setSelected(stage)}
+                    aria-label={`Zone ${stage.id}, ${stage.name}, ${state === "locked" ? "locked" : state === "cleared" ? "cleared" : "ready"}`}
+                  >
+                    <ZoneBadge layout={stage.layout} />
+                    {state === "locked" ? (
+                      <span className={styles.nodeLock}>
+                        <LockIcon size={26} color="var(--chalk)" />
+                      </span>
+                    ) : (
+                      <span className={styles.nodeNumber}>{stage.id}</span>
+                    )}
+                  </button>
+                  <div className={styles.label}>
+                    <span className={styles.labelName}>{stage.name}</span>
+                    <span className={styles.labelPlace}>{stage.place}</span>
+                    {state === "cleared" && record ? <Stars count={record.stars} /> : isCurrent ? <span className={styles.nextTag}>next up</span> : null}
+                  </div>
                 </div>
-              </div>
-              {next && <Connector fromLeft={left} lit={nextLit} animate={unlockedByCelebration === next.id} />}
-            </li>
-          );
-        })}
-      </ol>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
 
       <Sheet open={selected !== null} onClose={() => setSelected(null)} label={selected ? `Zone ${selected.id} details` : "Zone"}>
         {selected && <ZoneDetail stage={selected} progress={progress} />}

@@ -127,9 +127,6 @@ export function ShopScreen() {
     }
   };
 
-  const unlockedPatches = ShopPatches.filter((p) => inventory.includes(patchItemKey(p.id))).length;
-  const ownedSkins = SkinList.filter((s) => ownsSkin(inventory, s.id)).length;
-
   return (
     <Screen>
       <TopBar title="SHOP" right={<DataPill />} />
@@ -150,12 +147,6 @@ export function ShopScreen() {
           </button>
         ))}
       </div>
-
-      <p className={styles.note}>
-        {tab === "powerups"
-          ? `new patches for your runs. unlock one and it can show up when you install a patch. ${unlockedPatches} of ${ShopPatches.length} unlocked`
-          : `change how Bit looks. his line changes with him. ${ownedSkins} of ${SkinList.length} owned`}
-      </p>
 
       <p className={styles.toast} role="status" aria-live="polite">{message ?? " "}</p>
 
