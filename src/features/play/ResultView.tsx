@@ -93,12 +93,12 @@ export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunSta
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle} style={{ color: "var(--threat)" }}>NETWORK DOWN</h1>
         <DashedRule width={260} />
-        <p className={styles.pageSub}>
-          {endless
-            ? `you held the cloud for ${endless.survived} ${endless.survived === 1 ? "wave" : "waves"}.`
-            : `the threats got through on wave ${run.wave} of ${run.maxWaves}.`}
-          {newBest && <span className={styles.newBest}>NEW BEST!</span>}
-        </p>
+        {endless && (
+          <p className={styles.pageSub}>
+            {`you held the cloud for ${endless.survived} ${endless.survived === 1 ? "wave" : "waves"}.`}
+            {newBest && <span className={styles.newBest}>NEW BEST!</span>}
+          </p>
+        )}
       </div>
 
       <div className={styles.resultArt}>

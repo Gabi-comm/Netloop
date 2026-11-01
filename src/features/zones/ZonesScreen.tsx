@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LockIcon, PlayIcon, StarIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
@@ -121,6 +122,7 @@ export function ZonesScreen() {
     scrolled.current = true;
     if (current > 2) nodeRefs.current[current - 1]?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [hydrated, current]);
+  const stars = Stages.reduce((n, stage) => n + (progress.stages[stage.id]?.stars ?? 0), 0);
   const unlockedByCelebration = celebrate !== null && celebrate < Stages.length ? celebrate + 1 : null;
   const litUntil = Stages.reduce((n, stage, i) => (i > 0 && isStageUnlocked(progress, stage.id) ? i : n), 0);
 
@@ -129,9 +131,29 @@ export function ZonesScreen() {
       <TopBar title="ZONES" right={<DataPill />} />
 
       <div className={styles.summary}>
-        <span>{hydrated ? `${cleared} of ${Stages.length} zones secured` : " "}</span>
-        <div className={styles.meter} aria-hidden="true">
-          <div className={styles.meterFill} style={{ transform: `scaleX(${cleared / Stages.length})` }} />
+        <div className={styles.summaryStat}>
+          <span className={styles.summaryValue}>
+            {hydrated ? cleared : 0}
+            <span className={styles.summaryOf}>/{Stages.length}</span>
+          </span>
+          <span className={styles.summaryLabel}>secured</span>
+        </div>
+        <ol className={styles.pips} aria-label={`${hydrated ? cleared : 0} of ${Stages.length} zones secured`}>
+          {Stages.map((stage) => {
+            const state = hydrated ? nodeState(progress, stage) : stage.id === 1 ? "open" : "locked";
+            return (
+              <li key={stage.id} className={`${styles.pip} ${styles[`pip_${state}`]} ${hydrated && stage.id === current && state === "open" ? styles.pipCurrent : ""}`}>
+                <ZoneBadge layout={stage.layout} />
+              </li>
+            );
+          })}
+        </ol>
+        <div className={styles.summaryStat}>
+          <span className={styles.summaryValue}>
+            <StarIcon size={20} />
+            {hydrated ? stars : 0}
+          </span>
+          <span className={styles.summaryLabel}>of {Stages.length * 3}</span>
         </div>
       </div>
 
@@ -158,6 +180,12 @@ export function ZonesScreen() {
               >
                 <ZoneScene layout={stage.layout} />
                 <div className={`${styles.shade} ${left ? styles.shadeLeft : styles.shadeRight}`} />
+                {index > 0 && (
+                  <svg aria-hidden="true" className={styles.seam} viewBox="0 0 100 10" preserveAspectRatio="none">
+                    <path d="M0 0 L100 10" stroke="#0a0a0a" strokeWidth="6" vectorEffect="non-scaling-stroke" />
+                    <path d="M0 1.2 L100 11.2" stroke="#f2f2ec" strokeOpacity="0.14" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                  </svg>
+                )}
                 <div className={`${styles.stop} ${left ? styles.left : styles.right}`}>
                   <button
                     type="button"
@@ -178,9 +206,27 @@ export function ZonesScreen() {
                     )}
                   </button>
                   <div className={styles.label}>
+                    <span className={styles.kicker}>
+                      ZONE {stage.id}
+                      {isCurrent && <span className={styles.nextTag}>next up</span>}
+                    </span>
                     <span className={styles.labelName}>{stage.name}</span>
-                    <span className={styles.labelPlace}>{stage.place}</span>
-                    {state === "cleared" && record ? <Stars count={record.stars} /> : isCurrent ? <span className={styles.nextTag}>next up</span> : null}
+                    {state === "locked" ? (
+                      <span className={styles.lockHint}>
+                        <LockIcon size={14} color="var(--muted)" /> clear {Stages[index - 1]?.name.toLowerCase()} first
+                      </span>
+                    ) : (
+                      <span className={styles.threatRow}>
+                        {stageThreats(stage)
+                          .filter((id) => PacketKinds[id].isThreat)
+                          .map((id) => (
+                            <span key={id} className={`${styles.threatChip} ${stage.newThreats.includes(id) ? styles.threatChipNew : ""}`} title={PacketKinds[id].label}>
+                              <Sprite anim={PacketKinds[id].walk} size={22} label={PacketKinds[id].label} playing={false} />
+                            </span>
+                          ))}
+                        {state === "cleared" && record && <Stars count={record.stars} size={15} />}
+                      </span>
+                    )}
                   </div>
                 </div>
               </li>
@@ -188,6 +234,33 @@ export function ZonesScreen() {
           })}
         </ol>
       </div>
+
+      <Link href="/endless" className={styles.beyond}>
+        <svg aria-hidden="true" className={styles.beyondArt} viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice">
+          <rect width="360" height="120" fill="#1b1830" />
+          <g fill="#b39af0">
+            <circle className={styles.twinkle} cx="40" cy="22" r="1.8" />
+            <circle className={styles.twinkle} style={{ animationDelay: "0.6s" }} cx="120" cy="14" r="1.4" />
+            <circle className={styles.twinkle} style={{ animationDelay: "1.1s" }} cx="250" cy="20" r="1.8" />
+            <circle className={styles.twinkle} style={{ animationDelay: "0.3s" }} cx="330" cy="34" r="1.4" />
+          </g>
+          <g className={styles.drift}>
+            <path d="M30 96 Q14 96 16 82 Q18 70 32 72 Q36 56 54 58 Q72 58 74 74 Q90 72 90 86 Q90 96 76 96 Z" fill="#2c2850" />
+            <path d="M220 104 Q204 104 206 90 Q208 78 222 80 Q226 64 244 66 Q262 66 264 82 Q280 80 280 94 Q280 104 266 104 Z" fill="#2c2850" />
+          </g>
+          <g className={styles.driftSlow}>
+            <path d="M130 70 Q118 70 120 60 Q122 52 132 53 Q136 42 150 43 Q164 44 165 56 Q176 55 176 64 Q176 70 166 70 Z" fill="#3a3466" />
+            <path d="M300 64 Q290 64 291 56 Q292 49 300 50 Q303 42 314 42 Q325 43 326 52 Q334 52 334 58 Q334 64 326 64 Z" fill="#3a3466" />
+          </g>
+        </svg>
+        <span className={styles.beyondText}>
+          <span className={styles.kicker}>BEYOND THE DATA CENTER</span>
+          <span className={styles.beyondTitle}>THE CLOUD</span>
+        </span>
+        <span className={styles.beyondGo} aria-hidden="true">
+          <PlayIcon size={22} />
+        </span>
+      </Link>
 
       <Sheet open={selected !== null} onClose={() => setSelected(null)} label={selected ? `Zone ${selected.id} details` : "Zone"}>
         {selected && <ZoneDetail stage={selected} progress={progress} />}

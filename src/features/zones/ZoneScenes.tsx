@@ -158,10 +158,22 @@ function Office() {
       <path d="M200 70 L290 70 L290 150 L200 150 Z" fill="#c9b38a" />
       <path d="M206 76 L284 76 L284 112 L206 112 Z" fill="#b39f78" />
       <path d="M214 84 L228 84 L228 94 L214 94 Z M240 82 L252 82 L252 92 L240 92 Z" fill="#ede06a" opacity="0.8" />
-      <path d="M30 96 L90 96 L90 150 L30 150 Z" fill="#c8c8c0" />
-      <path d="M36 102 L84 102 L84 116 L36 116 Z" fill="#8a8a82" />
-      <path className={styles.paper} d="M44 84 L76 84 L76 102 L44 102 Z" fill="#f2f2ec" />
-      <path d="M48 90 L70 90 M48 95 L64 95" stroke="#9a9a92" strokeWidth="1.5" className={styles.paper} />
+      <defs>
+        <clipPath id="office-printer-slot">
+          <rect x="30" y="60" width="60" height="44" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#office-printer-slot)">
+        <g className={styles.paper}>
+          <path d="M44 82 L76 82 L76 106 L44 106 Z" fill="#f2f2ec" />
+          <path d="M49 89 L71 89 M49 94 L66 94 M49 99 L69 99" stroke="#9a9a92" strokeWidth="1.5" strokeLinecap="round" />
+        </g>
+      </g>
+      <path d="M28 104 Q28 100 32 100 L88 100 Q92 100 92 104 L92 150 L28 150 Z" fill="#c8c8c0" />
+      <path d="M40 100 L80 100 L80 105 L40 105 Z" fill="#3a3a38" />
+      <path d="M36 114 L84 114 L84 126 L36 126 Z" fill="#a8a8a0" />
+      <path d="M38 134 L82 134 L82 142 L38 142 Z" fill="#b8b8b0" />
+      <circle className={styles.led} cx="82" cy="108" r="2.2" fill="#8ad15b" />
       <path d="M118 108 L144 108 L144 150 L118 150 Z" fill="#e8e4d2" />
       <path d="M120 78 Q120 70 131 70 Q142 70 142 78 L142 106 L120 106 Z" fill="#5fd3e0" opacity="0.6" />
       <circle className={styles.bubble} cx="128" cy="98" r="2.6" fill="#f2f2ec" />
