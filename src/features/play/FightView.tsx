@@ -13,6 +13,7 @@ import { progressStore } from "@/lib/progress";
 import { BandwidthMeter } from "./BandwidthMeter";
 import { EnemyBriefing } from "./EnemyBriefing";
 import { PatchStrip } from "./PatchStrip";
+import { ZoneBackdrop } from "./ZoneBackdrop";
 import styles from "./play.module.css";
 
 type FightViewProps = {
@@ -50,7 +51,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const renderer = new PlayfieldRenderer(sprites, run.stage.seed + run.wave);
+    const renderer = new PlayfieldRenderer(sprites);
     const font = getComputedStyle(document.documentElement).getPropertyValue("--font-gochi").trim();
     renderer.setFont(font ? `${font}, cursive` : "cursive");
     renderer.setSkin(skin);
@@ -148,6 +149,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
   return (
     <div className={styles.stage} ref={containerRef}>
+      <ZoneBackdrop layout={run.stage.layout} endless={endless} />
       <canvas
         ref={canvasRef}
         className={styles.canvas}

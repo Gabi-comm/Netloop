@@ -1,0 +1,132 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.62;
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(18, 18, 17, 0.72) 0%, rgba(18, 18, 17, 0.35) 38%, rgba(18, 18, 17, 0.2) 70%, rgba(18, 18, 17, 0.5) 100%),
+    radial-gradient(120% 80% at 50% 55%, transparent 40%, rgba(10, 10, 10, 0.55) 100%);
+}
+
+.glow {
+  animation: glow 3.2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 46%, 54%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.led {
+  animation: led 1.4s steps(2) infinite;
+}
+
+@keyframes led {
+  50% { opacity: 0.25; }
+}
+
+.twinkle {
+  animation: led 2.6s steps(2) infinite;
+}
+
+.tail {
+  transform-box: fill-box;
+  transform-origin: 100% 100%;
+  animation: wag 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes wag {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(14deg); }
+}
+
+.steam {
+  animation: steam 2.4s ease-in-out infinite;
+}
+
+@keyframes steam {
+  0% { transform: translateY(10px); opacity: 0; }
+  40% { opacity: 0.55; }
+  100% { transform: translateY(-16px); opacity: 0; }
+}
+
+.swing {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: swing 3s ease-in-out infinite alternate;
+}
+
+@keyframes swing {
+  from { transform: rotate(-2.5deg); }
+  to { transform: rotate(2.5deg); }
+}
+
+.bubble {
+  animation: bubble 1.8s ease-in infinite;
+}
+
+@keyframes bubble {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-34px); opacity: 0; }
+}
+
+.screen {
+  animation: screen 2.6s ease-in-out infinite;
+}
+
+@keyframes screen {
+  0%, 100% { fill: #1d3a2a; }
+  50% { fill: #24503a; }
+}
+
+.window {
+  animation: led 2.4s steps(2) infinite;
+}
+
+.paper {
+  animation: paper 3.2s ease-in-out infinite;
+}
+
+@keyframes paper {
+  0% { transform: translateY(40px); opacity: 1; }
+  55%, 80% { transform: translateY(0); opacity: 1; }
+  95% { transform: translateY(-6px); opacity: 0; }
+  100% { transform: translateY(40px); opacity: 0; }
+}
+
+.fan {
+  animation: spin 1.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.drift {
+  animation: drift 28s linear infinite;
+}
+
+@keyframes drift {
+  from { transform: translateX(-180px); }
+  to { transform: translateX(420px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop * {
+    animation: none !important;
+  }
+}

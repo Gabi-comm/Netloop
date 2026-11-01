@@ -32,32 +32,17 @@ export class SpriteCache {
   }
 }
 
-type Decor = { x: number; y: number; kind: "grass" | "pebble"; size: number };
-
-function makeDecor(seed: number): Decor[] {
-  let s = seed;
-  const rand = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  return Array.from({ length: 14 }, (_, i) => ({
-    x: rand(),
-    y: 0.08 + rand() * 0.7,
-    kind: i % 3 === 0 ? "pebble" : "grass",
-    size: 16 + rand() * 10,
-  }));
-}
-
 const SERVER_HIT_MS = 700;
 
 
 export class PlayfieldRenderer {
   private readonly sprites: SpriteCache;
-  private readonly decor: Decor[];
   private displayFont = "cursive";
   private skin: Skin = Skins.classic;
   private readonly tints = new Map<string, HTMLCanvasElement>();
 
-  constructor(sprites: SpriteCache, seed: number) {
+  constructor(sprites: SpriteCache) {
     this.sprites = sprites;
-    this.decor = makeDecor(seed);
   }
 
   setSkin(skin: Skin) {
@@ -123,12 +108,6 @@ export class PlayfieldRenderer {
   draw(ctx: CanvasRenderingContext2D, engine: GameEngine) {
     const { width: w, height: h, scale: s, clockMs: now } = engine;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = NetColors.ground;
-    ctx.fillRect(0, 0, w, h);
-
-    for (const d of this.decor) {
-      this.sprite(ctx, d.kind === "grass" ? Sprites.env_grass : Sprites.env_pebble, 0, { x: d.x * w, y: d.y * h }, d.size * s, 0.9);
-    }
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
