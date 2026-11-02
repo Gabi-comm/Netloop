@@ -37,6 +37,7 @@ export type Hud = {
   bandwidth: number;
   drawing: boolean;
   waveProgress: number;
+  threatsLeft: number;
   killSwitchOwned: boolean;
   killSwitchCharges: number;
   honeypotOwned: boolean;
@@ -62,6 +63,7 @@ export class GameEngine {
 
   clockMs = 0;
   serverHurtAtMs = -1e9;
+  serverHappyAtMs = -1e9;
   width = 0;
   height = 0;
   scale = 1;
@@ -151,6 +153,7 @@ export class GameEngine {
       bandwidth: this.bandwidth,
       drawing: this.drawing,
       waveProgress: Math.max(0, Math.min(1, this.resolvedThreats / (this.resolvedThreats + remaining + alive || 1))),
+      threatsLeft: remaining + alive,
       killSwitchOwned: hasPatch(this.run, "killSwitch"),
       killSwitchCharges: killSwitchCharges(this.run),
       honeypotOwned,
@@ -164,7 +167,7 @@ export class GameEngine {
     if (!this.hudListener) return;
     const hud = this.hud();
     const key = [
-      hud.phase, hud.score, hud.combo, hud.uptime, Math.round(hud.bandwidth * 40), hud.drawing, Math.round(hud.waveProgress * 20),
+      hud.phase, hud.score, hud.combo, hud.uptime, Math.round(hud.bandwidth * 40), hud.drawing, Math.round(hud.waveProgress * 20), hud.threatsLeft,
       hud.killSwitchCharges, hud.honeypotReady, Math.round(hud.honeypotCooldown * 20), hud.briefing,
     ].join("|");
     if (key === this.lastHudKey) return;
@@ -379,6 +382,7 @@ export class GameEngine {
       this.serverHurtAtMs = this.clockMs;
       this.popups.push({ text: "-1 uptime", at: this.serverPosition, startMs: this.clockMs, color: NetColors.threat });
       this.sfx("breach");
+      this.sfx("hurt");
       if (this.uptime <= 0) {
         this.uptime = 0;
         this.phase = "lost";
@@ -390,6 +394,7 @@ export class GameEngine {
     } else {
       this.score += p.kind.points;
       this.run.dataEarned += 1;
+      this.serverHappyAtMs = this.clockMs;
       this.popups.push({ text: `+${p.kind.points}`, at: this.serverPosition, startMs: this.clockMs, color: NetColors.legit });
       this.sfx("deliver");
     }

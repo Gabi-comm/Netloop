@@ -33,6 +33,11 @@ function sparkle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number)
   ctx.fill();
 }
 
+function hash(n: number) {
+  const x = Math.sin(n * 127.1) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 export function drawBitLine(ctx: CanvasRenderingContext2D, line: readonly Vec[], style: LineStyle, s: number, now: number) {
   const trace = () => {
     ctx.beginPath();
@@ -112,6 +117,38 @@ export function drawBitLine(ctx: CanvasRenderingContext2D, line: readonly Vec[],
         ctx.restore();
       });
       break;
+    case "glitch": {
+      const tick = Math.floor(now / 90);
+      const jolt = hash(tick) < 0.3 ? (hash(tick + 7) - 0.5) * 6 * s : 0;
+      ctx.lineWidth = 4 * s;
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = style.edge;
+      ctx.save();
+      ctx.translate(-2.5 * s + jolt, -1 * s);
+      trace();
+      ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = style.color;
+      ctx.save();
+      ctx.translate(2.5 * s - jolt, 1 * s);
+      trace();
+      ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = NetColors.chalk;
+      ctx.lineWidth = 2.2 * s;
+      trace();
+      ctx.stroke();
+      walk(line, 16 * s, (at, angle, i) => {
+        const r = hash(i * 13.7 + tick);
+        if (r > 0.35) return;
+        const off = (hash(i * 3.1 + tick * 1.3) - 0.5) * 14 * s;
+        const size = (3 + hash(i + tick * 0.7) * 5) * s;
+        ctx.fillStyle = r < 0.12 ? style.edge : r < 0.24 ? style.color : (style.alt ?? style.color);
+        ctx.fillRect(at.x - Math.sin(angle) * off - size / 2, at.y + Math.cos(angle) * off - size / 2, size, size * 0.6);
+      });
+      break;
+    }
     case "stars":
       ctx.shadowColor = style.color;
       ctx.shadowBlur = 10 * s;

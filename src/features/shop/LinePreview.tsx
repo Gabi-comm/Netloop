@@ -36,10 +36,10 @@ export function LinePreview({ style, label }: { style: LineStyle; label: string 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, HEIGHT);
       drawBitLine(ctx, points, style, 0.85, now);
-      if (!still && style.kind === "stars") raf = requestAnimationFrame(paint);
+      if (!still && (style.kind === "stars" || style.kind === "glitch")) raf = requestAnimationFrame(paint);
     };
     paint(0);
-    if (!still && style.kind === "stars") raf = requestAnimationFrame(paint);
+    if (!still && (style.kind === "stars" || style.kind === "glitch")) raf = requestAnimationFrame(paint);
     return () => cancelAnimationFrame(raf);
   }, [style]);
 

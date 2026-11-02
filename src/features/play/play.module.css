@@ -66,9 +66,22 @@
   line-height: 1;
 }
 
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .segments {
   display: flex;
   gap: 4px;
+}
+
+.threatsLeft {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--data);
+  white-space: nowrap;
 }
 
 .segment {
@@ -559,6 +572,24 @@
 .bandwidth[data-line="neon"] .bandwidthFill,
 .bandwidth[data-line="stars"] .bandwidthFill {
   box-shadow: 0 0 10px var(--bw);
+}
+
+.bandwidth[data-line="glitch"] .bandwidthFill {
+  box-shadow: -2px 0 0 var(--bw-edge), 2px 0 0 var(--bw);
+  animation: glitchBar 1.1s steps(1) infinite;
+}
+
+@keyframes glitchBar {
+  0%, 70%, 100% { translate: 0 0; }
+  74% { translate: 3px 0; }
+  78% { translate: -2px 0; }
+  82% { translate: 0 0; filter: hue-rotate(90deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandwidth[data-line="glitch"] .bandwidthFill {
+    animation: none;
+  }
 }
 
 .bandwidth[data-line="ribbon"] .bandwidthFill {

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CloudIcon, CodexIcon, GearIcon, PlayIcon, ShopIcon, ZonesIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, DataPill, IconButton, Screen, Sheet, Toggle } from "@/components/ui";
 import { getStage, Stages } from "@/data/stages";
 import { skinById } from "@/game/skins";
+import { savedEndlessWave } from "@/lib/endlessSave";
 import { clearedCount, nextStageId, progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { setMusicEnabled, setMusicVolume, useMusicEnabled, useMusicVolume } from "@/lib/music";
 import { playSfx, setSoundEnabled, setSoundVolume, useSoundEnabled, useSoundVolume } from "@/lib/sfx";
@@ -81,11 +82,14 @@ export function HomeScreen() {
   const progress = useProgress();
   const hydrated = useHydrated();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [endlessWave, setEndlessWave] = useState<number | null>(null);
   const sound = useSoundEnabled();
   const volume = useSoundVolume();
   const musicOn = useMusicEnabled();
   const musicLevel = useMusicVolume();
   const skin = skinById(hydrated ? progress.equippedSkin : undefined);
+
+  useEffect(() => setEndlessWave(savedEndlessWave()), []);
 
   const stageId = nextStageId(progress);
   const stage = getStage(stageId)!;
@@ -103,7 +107,7 @@ export function HomeScreen() {
       <Intro />
       <div className={styles.top}>
         <DataPill />
-        <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+        <IconButton label="Settings" sound="settings" onClick={() => setSettingsOpen(true)}>
           <GearIcon />
         </IconButton>
       </div>
@@ -129,7 +133,7 @@ export function HomeScreen() {
       </Link>
 
       <nav className={styles.tiles} aria-label="Main menu">
-        <Link href="/zones" className={styles.tile}>
+        <Link href="/zones" className={styles.tile} onClick={() => playSfx("zones")}>
           <Hex color="var(--data)">
             <ZonesIcon size={26} />
           </Hex>
@@ -141,19 +145,26 @@ export function HomeScreen() {
           </Hex>
           <span className={styles.tileTitle}>CODEX</span>
         </Link>
-        <Link href="/shop" className={styles.tile}>
+        <Link href="/shop" className={styles.tile} onClick={() => playSfx("shop")}>
           <Hex color="var(--pink)">
             <ShopIcon size={26} />
           </Hex>
           <span className={styles.tileTitle}>SHOP</span>
         </Link>
-        <Link href="/endless" className={styles.tile} aria-label="Endless mode, The Cloud">
+        <Link
+          href="/endless"
+          className={styles.tile}
+          aria-label={endlessWave ? `Endless mode, continue from wave ${endlessWave}` : "Endless mode, The Cloud"}
+          onClick={() => playSfx("zone", 8)}
+        >
           <Hex color="var(--epic-light)">
             <CloudIcon size={26} color="var(--epic-light)" />
           </Hex>
           <span className={styles.tileText}>
             <span className={styles.tileTitle}>ENDLESS</span>
-            {hydrated && progress.endless.bestScore > 0 && (
+            {endlessWave ? (
+              <span className={styles.tileBest}>continue · wave {endlessWave}</span>
+            ) : hydrated && progress.endless.bestScore > 0 && (
               <span className={styles.tileBest}>best {progress.endless.bestScore.toLocaleString()}</span>
             )}
           </span>

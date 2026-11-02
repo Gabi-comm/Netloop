@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { pointInPolygon, type Vec } from "@/game/geometry";
+import { playSfx, unlockAudio } from "@/lib/sfx";
 import styles from "./home.module.css";
 
 const ARENA = { x: 150, y: 148, rx: 118, ry: 46 };
@@ -137,6 +138,8 @@ export function HeroScene({ lineColor = "#f2f2ec" }: { lineColor?: string }) {
     const p = toSvg(e);
     if (!p) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    unlockAudio();
+    playSfx("draw");
     drawing.current = [p];
     setTrail([p]);
     setTried(true);
@@ -160,10 +163,12 @@ export function HeroScene({ lineColor = "#f2f2ec" }: { lineColor?: string }) {
     const t = performance.now();
     const fresh: Burst[] = [];
     let got = 0;
+    let oops = false;
     for (const c of critters.current) {
       if (t < c.hiddenUntil || !pointInPolygon({ x: c.x, y: c.y - 14 }, points)) continue;
       if (c.kind === "legit") {
         c.scaredUntil = t + 900;
+        oops = true;
         fresh.push({ id: nextId.current++, x: c.x, y: c.y - 30, at: t, text: "oops!", bad: true });
         continue;
       }
@@ -173,6 +178,9 @@ export function HeroScene({ lineColor = "#f2f2ec" }: { lineColor?: string }) {
       Object.assign(c, randomSpot());
       c.spawn = t + RESPAWN_MS;
     }
+    if (got > 0) playSfx("loop", got);
+    if (oops) playSfx("legitHit");
+    if (!got && !oops) playSfx("miss");
     setClosed({ id: nextId.current++, points });
     setCaught((n) => n + got);
     setBursts((list) => [...list, ...fresh]);

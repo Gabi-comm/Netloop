@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress, useHydrated } from "@/lib/progress";
-import { playSfx } from "@/lib/sfx";
+import { playSfx, type SfxName } from "@/lib/sfx";
 import { BackIcon, DataIcon } from "./Icons";
 import styles from "./ui.module.css";
 
@@ -69,13 +69,15 @@ export function IconLink({ href, label, children }: { href: string; label: strin
   );
 }
 
-export function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+export function IconButton({
+  label, onClick, children, sound = "tap",
+}: { label: string; onClick: () => void; children: ReactNode; sound?: SfxName }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={() => {
-        playSfx("tap");
+        playSfx(sound);
         onClick();
       }}
       className={styles.iconButton}

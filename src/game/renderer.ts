@@ -33,6 +33,7 @@ export class SpriteCache {
 }
 
 const SERVER_HIT_MS = 700;
+const SERVER_JUMP_MS = 440;
 
 
 export class PlayfieldRenderer {
@@ -105,6 +106,30 @@ export class PlayfieldRenderer {
     ctx.restore();
   }
 
+  private serverJump(ctx: CanvasRenderingContext2D, anim: SpriteAnim, now: number, t: number, at: Vec, size: number, s: number) {
+    const img = this.sprites.get(anim, now);
+    if (!img) return;
+    const crouch = t < 70 ? Math.sin((t / 70) * Math.PI) : 0;
+    const air = t >= 70 && t < 330 ? (t - 70) / 260 : -1;
+    const lift = air >= 0 ? 4 * air * (1 - air) * 18 * s : 0;
+    const stretch = air >= 0 ? Math.sin(air * Math.PI) * (air < 0.5 ? 1 : 0.4) : 0;
+    const land = t >= 330 ? Math.sin(((t - 330) / (SERVER_JUMP_MS - 330)) * Math.PI) : 0;
+    const squash = crouch * 0.7 + land;
+    const glow = Math.max(0, 1 - t / SERVER_JUMP_MS) * 0.4;
+    const h = size * (img.naturalHeight / img.naturalWidth);
+    ctx.save();
+    ctx.translate(at.x, at.y + h / 2 - lift);
+    ctx.scale(1 + squash * 0.12 - stretch * 0.06, 1 - squash * 0.13 + stretch * 0.1);
+    const x = -size / 2;
+    const y = -h;
+    ctx.drawImage(img, x, y, size, h);
+    if (glow > 0.01) {
+      ctx.globalAlpha = glow;
+      ctx.drawImage(this.tinted(img, NetColors.legit), x, y, size, h);
+    }
+    ctx.restore();
+  }
+
   draw(ctx: CanvasRenderingContext2D, engine: GameEngine) {
     const { width: w, height: h, scale: s, clockMs: now } = engine;
     ctx.clearRect(0, 0, w, h);
@@ -124,7 +149,9 @@ export class PlayfieldRenderer {
     this.serverBase(ctx, server, w, s, now, engine.threatsNearServer, sinceHit);
     const hurt = sinceHit < 260;
     const serverAnim = hurt ? Sprites.server_hurt : engine.threatsNearServer ? Sprites.server_alert : Sprites.server_idle;
+    const sinceHappy = now - engine.serverHappyAtMs;
     if (sinceHit < SERVER_HIT_MS) this.serverHit(ctx, serverAnim, sinceHit, server, 96 * s, s);
+    else if (sinceHappy < SERVER_JUMP_MS) this.serverJump(ctx, serverAnim, now, sinceHappy, server, 96 * s, s);
     else this.sprite(ctx, serverAnim, now, { x: server.x, y: server.y }, 96 * s);
     const bitAnim = hurt ? this.skin.anims.hurt : engine.drawing ? this.skin.anims.draw : this.skin.anims.idle;
     this.sprite(ctx, bitAnim, hurt ? now - engine.serverHurtAtMs : now, { x: server.x - 92 * s, y: server.y + 22 * s }, 64 * s);

@@ -19,7 +19,7 @@ export type SpriteName =
   | "env_cloud" | "env_grass" | "env_pebble"
   | BitSkinSpriteName;
 
-export const SkinIds = ["bubblegum", "sprout", "neon", "wizard", "royal"] as const;
+export const SkinIds = ["bubblegum", "sprout", "neon", "wizard", "royal", "glitch"] as const;
 export type SkinSpriteId = (typeof SkinIds)[number];
 export type BitSkinSpriteName = `bit_${SkinSpriteId}_${"idle" | "draw" | "hurt"}`;
 
@@ -75,11 +75,18 @@ const table: [SpriteName, number, number, boolean][] = [
   ["env_pebble", 1, 0, false],
 ];
 
-const skinTable: [SpriteName, number, number, boolean][] = SkinIds.flatMap((id) => [
-  [`bit_${id}_idle`, 4, 220, true],
-  [`bit_${id}_draw`, 3, 120, true],
-  [`bit_${id}_hurt`, 2, 120, false],
-] as [SpriteName, number, number, boolean][]);
+const SkinFrames: Partial<Record<SkinSpriteId, [number, number][]>> = {
+  glitch: [[8, 120], [4, 100], [3, 110]],
+};
+
+const skinTable: [SpriteName, number, number, boolean][] = SkinIds.flatMap((id) => {
+  const [idle, draw, hurt] = SkinFrames[id] ?? [[4, 220], [3, 120], [2, 120]];
+  return [
+    [`bit_${id}_idle`, ...idle, true],
+    [`bit_${id}_draw`, ...draw, true],
+    [`bit_${id}_hurt`, ...hurt, false],
+  ] as [SpriteName, number, number, boolean][];
+});
 
 table.push(...skinTable);
 

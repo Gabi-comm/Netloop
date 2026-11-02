@@ -34,13 +34,18 @@ export type SfxName =
   | "shutdown"
   | "play"
   | "codex"
-  | "page";
+  | "page"
+  | "zones"
+  | "shop"
+  | "wave"
+  | "settings"
+  | "hurt";
 
 const KEY = "netloop.sound.v1";
 const VOLUME_KEY = "netloop.volume.v1";
 const DEFAULT_VOLUME = 0.7;
 const MASTER_GAIN = 1.4;
-const MIN_GAP_MS: Partial<Record<SfxName, number>> = { deliver: 70, draw: 120, noBandwidth: 400, tap: 40 };
+const MIN_GAP_MS: Partial<Record<SfxName, number>> = { wave: 500, deliver: 70, draw: 120, noBandwidth: 400, tap: 40 };
 
 let enabled = true;
 let volume = DEFAULT_VOLUME;
@@ -165,6 +170,36 @@ function pluck(ac: AudioContext, { freq, at = 0, dur = 0.22, vol = 0.22, type = 
   out(gain, send);
   osc.start(t);
   osc.stop(t + dur + 0.05);
+}
+
+function yelp(ac: AudioContext, at: number, from: number, peak: number, to: number, dur: number, vol: number) {
+  const t = ac.currentTime + at;
+  const osc = ac.createOscillator();
+  const wobble = ac.createOscillator();
+  const depth = ac.createGain();
+  const formant = ac.createBiquadFilter();
+  const gain = ac.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(from, t);
+  osc.frequency.exponentialRampToValueAtTime(peak, t + dur * 0.18);
+  osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+  wobble.frequency.value = 22;
+  depth.gain.value = peak * 0.03;
+  wobble.connect(depth).connect(osc.frequency);
+  formant.type = "bandpass";
+  formant.frequency.setValueAtTime(1300, t);
+  formant.frequency.exponentialRampToValueAtTime(700, t + dur);
+  formant.Q.value = 1.4;
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+  gain.gain.setValueAtTime(vol, t + dur * 0.5);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(formant).connect(gain);
+  out(gain, 0.3);
+  osc.start(t);
+  wobble.start(t);
+  osc.stop(t + dur + 0.05);
+  wobble.stop(t + dur + 0.05);
 }
 
 function bell(ac: AudioContext, freq: number, at = 0, dur = 0.6, vol = 0.12) {
@@ -425,6 +460,40 @@ const Sounds: Record<SfxName, (ac: AudioContext, level: number) => void> = {
     noise(ac, { dur: 0.1, vol: 0.09, freq: side ? 3200 : 2200, to: side ? 1400 : 4200, q: 1, attack: 0.02, send: 0.2 });
     pluck(ac, { freq: side ? N.B4 : N.E4, at: 0.05, dur: 0.14, vol: 0.14 });
     bell(ac, side ? N.E5 * 2 : N.B5, 0.08, 0.3, 0.05);
+  },
+  zones: (ac) => {
+    pluck(ac, { freq: N.A3, bend: 1.08, dur: 0.16, vol: 0.18, type: "sine" });
+    [N.E4, N.A4, N.B4, N.E5].forEach((f, i) => pluck(ac, { freq: f, at: 0.05 + i * 0.06, dur: 0.2, vol: 0.12 }));
+    noise(ac, { dur: 0.3, vol: 0.06, freq: 400, to: 1600, q: 1, attack: 0.15, send: 0.5 });
+    bell(ac, N.A5, 0.3, 0.6, 0.06);
+  },
+  shop: (ac) => {
+    bell(ac, N.E5 * 2, 0, 0.5, 0.08);
+    bell(ac, N.B5, 0.09, 0.6, 0.07);
+    noise(ac, { at: 0.02, dur: 0.12, vol: 0.05, freq: 6000, q: 3, send: 0.4 });
+    pluck(ac, { freq: N.E4, at: 0.16, dur: 0.18, vol: 0.14 });
+    pluck(ac, { freq: N.Gs4, at: 0.22, dur: 0.24, vol: 0.13 });
+  },
+  wave: (ac, final) => {
+    const lift = final ? Math.pow(2, 3 / 12) : 1;
+    pluck(ac, { freq: 65, bend: 0.6, dur: 0.3, vol: 0.32, type: "sine", bright: 500 });
+    noise(ac, { dur: 0.12, vol: 0.1, freq: 1600, q: 0.9, send: 0.5 });
+    pluck(ac, { freq: N.A3 * lift, at: 0.02, dur: 0.18, vol: 0.16, type: "sawtooth", bright: 1600 });
+    pluck(ac, { freq: N.E4 * lift, at: 0.14, dur: 0.18, vol: 0.15, type: "sawtooth", bright: 1800 });
+    pluck(ac, { freq: N.A4 * lift, at: 0.26, dur: 0.42, vol: 0.16, type: "sawtooth", bright: 2400 });
+    pad(ac, [N.A3 * lift, N.Cs4 * lift, N.E4 * lift], 0.26, 0.6, 0.05);
+    bell(ac, N.A5 * lift, 0.3, 0.5, 0.05);
+  },
+  settings: (ac) => {
+    pluck(ac, { freq: N.E4, dur: 0.06, vol: 0.12, type: "square", bright: 2200, send: 0.2 });
+    pluck(ac, { freq: N.B4, at: 0.05, dur: 0.06, vol: 0.1, type: "square", bright: 2200, send: 0.2 });
+    noise(ac, { at: 0.02, dur: 0.18, vol: 0.06, freq: 900, to: 2400, q: 2, attack: 0.08, send: 0.3 });
+    pluck(ac, { freq: N.A4, at: 0.12, dur: 0.22, vol: 0.13 });
+    bell(ac, N.E5, 0.16, 0.45, 0.06);
+  },
+  hurt: (ac) => {
+    yelp(ac, 0.05, 560, 900, 360, 0.3, 0.5);
+    pluck(ac, { freq: N.B3, at: 0.05, bend: 0.7, dur: 0.18, vol: 0.08, type: "square", bright: 900, send: 0.2 });
   },
   briefing: (ac) => [N.E4, N.A4, N.Cs5].forEach((f, i) => pluck(ac, { freq: f, at: i * 0.08, dur: 0.24, vol: 0.14 })),
 };

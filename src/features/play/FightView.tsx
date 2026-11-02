@@ -115,6 +115,10 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   }, [hud.phase]);
 
   useEffect(() => {
+    playSfx("wave", run.wave === run.maxWaves ? 1 : 0, run.wave > 1 ? 280 : 60);
+  }, [run]);
+
+  useEffect(() => {
     if (hud.briefing) progressStore.markSeen(hud.briefing);
   }, [hud.briefing]);
 
@@ -176,10 +180,15 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
               WAVE {run.wave}
               <span className={styles.waveOf}> / {endless ? "∞" : run.maxWaves}</span>
             </span>
-            <div className={styles.segments} aria-hidden="true">
-              {Array.from({ length: SEGMENTS }, (_, i) => (
-                <div key={i} className={`${styles.segment} ${i < lit ? styles.segmentOn : ""}`} />
-              ))}
+            <div className={styles.progressRow}>
+              <div className={styles.segments} aria-hidden="true">
+                {Array.from({ length: SEGMENTS }, (_, i) => (
+                  <div key={i} className={`${styles.segment} ${i < lit ? styles.segmentOn : ""}`} />
+                ))}
+              </div>
+              <span className={styles.threatsLeft}>
+                {hud.threatsLeft} {hud.threatsLeft === 1 ? "threat" : "threats"} left
+              </span>
             </div>
             <span className={styles.zoneName}>{where} · {run.stage.name.toLowerCase()}</span>
           </div>

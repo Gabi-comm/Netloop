@@ -3,7 +3,7 @@ import { Sprites, type SkinSpriteId, type SpriteAnim } from "./sprites";
 
 export type SkinId = "classic" | SkinSpriteId;
 
-export type LineKind = "solid" | "beads" | "vine" | "neon" | "stars" | "ribbon";
+export type LineKind = "solid" | "beads" | "vine" | "neon" | "stars" | "ribbon" | "glitch";
 
 export type LineStyle = {
   kind: LineKind;
@@ -66,6 +66,12 @@ export const Skins: Record<SkinId, Skin> = {
     blurb: "all hail the king of packets. draws a golden ribbon",
     line: { kind: "ribbon", color: "#f3d36b", edge: "#b8871a" },
     accent: "#f3d36b", anims: animsFor("royal"),
+  },
+  glitch: {
+    id: "glitch", title: "Glitch Bit", price: 1000, lineName: "corrupted signal",
+    blurb: "something went wrong in his code. he glitches out and teleports around. draws a broken, flickering signal",
+    line: { kind: "glitch", color: "#5fd3e0", edge: "#e0567f", alt: "#8ad15b" },
+    accent: "#5fd3e0", anims: animsFor("glitch"),
   },
 };
 
