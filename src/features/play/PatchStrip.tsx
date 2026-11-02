@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Sprite } from "@/components/Sprite";
-import { Patches, patchTag, RarityStyle, type PatchId } from "@/game/patches";
+import { describePatch, Patches, patchTag, RarityStyle, type PatchId } from "@/game/patches";
 import styles from "./play.module.css";
 
 const HOLD_MS = 350;
 
-export function PatchStrip({ patches }: { patches: PatchId[] }) {
+export function PatchStrip({ patches, levels }: { patches: PatchId[]; levels: Partial<Record<PatchId, number>> }) {
   const [open, setOpen] = useState<PatchId | null>(null);
   const timer = useRef<number | null>(null);
 
@@ -50,7 +50,7 @@ export function PatchStrip({ patches }: { patches: PatchId[] }) {
                 type="button"
                 className={`${styles.patchIcon} ${open === id ? styles.patchIconOpen : ""}`}
                 style={{ borderColor: RarityStyle[patch.rarity].color }}
-                aria-label={`${patch.title}${count > 1 ? ` ×${count}` : ""}: ${patch.description}`}
+                aria-label={`${patch.title} level ${levels[id] ?? 1}${count > 1 ? ` ×${count}` : ""}: ${describePatch(id, levels[id])}`}
                 aria-expanded={open === id}
                 onPointerDown={onDown(id)}
                 onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(id)}
@@ -69,9 +69,9 @@ export function PatchStrip({ patches }: { patches: PatchId[] }) {
 
       {shown && (
         <div className={styles.patchTip} role="tooltip">
-          <span className={styles.patchTipTag} style={{ color: RarityStyle[shown.rarity].color }}>{patchTag(shown)}</span>
+          <span className={styles.patchTipTag} style={{ color: RarityStyle[shown.rarity].color }}>{patchTag(shown, levels[shown.id])}</span>
           <span className={styles.patchTipTitle}>{shown.title}</span>
-          <span className={styles.patchTipDesc}>{shown.description}</span>
+          <span className={styles.patchTipDesc}>{describePatch(shown.id, levels[shown.id])}</span>
         </div>
       )}
     </div>

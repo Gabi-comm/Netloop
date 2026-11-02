@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckIcon, DataIcon, RerollIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, DashedRule, UptimeBars } from "@/components/ui";
-import { offerPatches, patchSeenKey, patchTag, RarityStyle, type Patch } from "@/game/patches";
+import { describePatch, offerPatches, patchSeenKey, patchTag, RarityStyle, type Patch } from "@/game/patches";
 import { rerollCost, type RunState } from "@/game/runState";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { playSfx } from "@/lib/sfx";
@@ -76,11 +76,11 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
                 </div>
                 <div className={styles.cardText}>
                   <span className={styles.cardTag} style={{ color: RarityStyle[patch.rarity].color }}>
-                    {patchTag(patch)}
+                    {patchTag(patch, run.levels[patch.id])}
                     {patch.stackable && run.patches.includes(patch.id) && " · +1 USE"}
                   </span>
                   <span className={styles.cardTitle}>{patch.title}</span>
-                  <span className={styles.cardDesc}>{patch.description}</span>
+                  <span className={styles.cardDesc}>{describePatch(patch.id, run.levels[patch.id])}</span>
                 </div>
                 {selected && (
                   <div className={styles.check}>

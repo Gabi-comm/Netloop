@@ -244,7 +244,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
         <BandwidthMeter value={hud.bandwidth} drawing={hud.drawing} skin={skin} />
 
-        <PatchStrip patches={run.patches} />
+        <PatchStrip patches={run.patches} levels={run.levels} />
       </div>
 
       {(hud.honeypotOwned || hud.killSwitchOwned) && (

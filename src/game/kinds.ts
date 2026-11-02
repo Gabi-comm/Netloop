@@ -42,7 +42,7 @@ export const PacketKinds: Record<PacketKindId, PacketKind> = {
   },
   zeroDay: {
     id: "zeroDay", label: "Zero-Day", caption: "breaks open lines", howTo: "dashes at your open line and cuts it. close loops fast",
-    isThreat: true, hp: 1, speed: 0.12, points: 200, size: 40, walk: Sprites.zero_day_spin, codex: true,
+    isThreat: true, hp: 1, speed: 0.085, points: 200, size: 40, walk: Sprites.zero_day_spin, codex: true,
   },
   worm: {
     id: "worm", label: "Worm", caption: "splits in two", howTo: "looping it leaves two half worms behind",
@@ -62,7 +62,7 @@ export const PacketKinds: Record<PacketKindId, PacketKind> = {
   },
   trojan: {
     id: "trojan", label: "Trojan", caption: "opens near server", howTo: "drop it early or it opens into two malware",
-    isThreat: true, hp: 1, speed: 0.085, points: 180, size: 46, walk: Sprites.trojan_idle, codex: true,
+    isThreat: true, hp: 1, speed: 0.11, points: 180, size: 46, walk: Sprites.trojan_idle, codex: true,
   },
   mitm: {
     id: "mitm", label: "Man in the Middle", caption: "hides by legit", howTo: "tails a legit packet. loop it without the friend",

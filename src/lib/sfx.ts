@@ -40,7 +40,8 @@ export type SfxName =
   | "wave"
   | "settings"
   | "hurt"
-  | "glitch";
+  | "glitch"
+  | "upgrade";
 
 const KEY = "netloop.sound.v1";
 const VOLUME_KEY = "netloop.volume.v1";
@@ -430,6 +431,13 @@ const Sounds: Record<SfxName, (ac: AudioContext, level: number) => void> = {
     const lift = Math.pow(2, Math.min(2, Math.max(0, rarity)) * (4 / 12));
     pluck(ac, { freq: N.E4 * lift, dur: 0.16, vol: 0.18 });
     bell(ac, N.B5 * lift, 0.04, 0.35, 0.06);
+  },
+  upgrade: (ac, level) => {
+    const up = Math.pow(2, ((level - 2) * 2) / 12);
+    noise(ac, { dur: 0.05, vol: 0.1, freq: 5200, q: 4, send: 0.2 });
+    [N.Cs4, N.E4, N.Gs4, N.Cs5].forEach((f, i) => pluck(ac, { freq: f * up, at: 0.04 + i * 0.05, dur: 0.16, vol: 0.12, type: "square", bright: 3200, send: 0.5 }));
+    bell(ac, N.Cs6 * up, 0.24, 0.6, 0.08);
+    if (level >= 5) pad(ac, [N.Cs5, N.F5, N.Gs5], 0.3, 0.7, 0.05);
   },
   install: (ac) => {
     [N.Cs4, N.E4, N.Gs4, N.B4, N.Cs5].forEach((f, i) => pluck(ac, { freq: f, at: i * 0.055, dur: 0.18, vol: 0.14, bright: 3000 }));

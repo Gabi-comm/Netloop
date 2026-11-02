@@ -14,13 +14,14 @@ export type Progress = {
   seen: string[];
   equippedSkin: string;
   endless: EndlessRecord;
+  patchLevels: Record<string, number>;
 };
 
 export type EndlessRecord = { bestWaves: number; bestScore: number; runs: number };
 
 const KEY = "netloop.progress.v1";
 
-const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [], equippedSkin: "classic", endless: { bestWaves: 0, bestScore: 0, runs: 0 } };
+const EMPTY: Progress = { version: 1, data: 0, stages: {}, lastCleared: null, inventory: [], seen: [], equippedSkin: "classic", endless: { bestWaves: 0, bestScore: 0, runs: 0 }, patchLevels: {} };
 
 let current: Progress = EMPTY;
 let loaded = false;
@@ -33,7 +34,7 @@ function load() {
     const raw = window.localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<Progress>;
-      current = { ...EMPTY, ...parsed, endless: { ...EMPTY.endless, ...parsed.endless }, version: 1 };
+      current = { ...EMPTY, ...parsed, endless: { ...EMPTY.endless, ...parsed.endless }, patchLevels: { ...parsed.patchLevels }, version: 1 };
     }
   } catch {
     current = EMPTY;
@@ -135,6 +136,14 @@ export const progressStore = {
     const prev = getSnapshot();
     if (prev.inventory.includes(itemId) || prev.data < price) return false;
     save({ ...prev, data: prev.data - price, inventory: [...prev.inventory, itemId] });
+    return true;
+  },
+
+  upgradePatch(patchId: string, price: number, maxLevel: number): boolean {
+    const prev = getSnapshot();
+    const level = prev.patchLevels[patchId] ?? 1;
+    if (level >= maxLevel || prev.data < price) return false;
+    save({ ...prev, data: prev.data - price, patchLevels: { ...prev.patchLevels, [patchId]: level + 1 } });
     return true;
   },
 

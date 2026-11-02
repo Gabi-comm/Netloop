@@ -63,6 +63,10 @@
   border-color: var(--line-strong);
 }
 
+.maxed {
+  border-color: var(--points);
+}
+
 .equipped {
   border-color: var(--pink);
 }
@@ -206,4 +210,54 @@
   min-width: 0;
   padding: 0 6px;
   gap: 4px;
+}
+
+.upgrade {
+  gap: 4px;
+  padding: 0 10px;
+}
+
+.levelRow {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.pips {
+  display: flex;
+  gap: 4px;
+}
+
+.pip {
+  width: 16px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--cable);
+  border: 1.5px solid var(--line);
+}
+
+.pipOn {
+  background: var(--points);
+  border-color: var(--points);
+}
+
+.levelLabel {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--points);
+  white-space: nowrap;
+}
+
+.lockedNote {
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.next {
+  font-size: 17px;
+  color: var(--soft);
 }

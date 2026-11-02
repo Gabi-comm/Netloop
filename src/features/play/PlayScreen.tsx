@@ -30,7 +30,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const hydrated = useHydrated();
   const [attempt, setAttempt] = useState(0);
   const [initial] = useState(() => (stageId === ENDLESS_ID ? loadEndless() : null));
-  const [run, setRun] = useState(() => initial?.run ?? createRun(stageId));
+  const [run, setRun] = useState(() => initial?.run ?? createRun(stageId, progressStore.get().patchLevels));
   const [view, setView] = useState<View>(initial?.view ?? "fight");
   const [reward, setReward] = useState<StageReward | null>(null);
   const [endlessResult, setEndlessResult] = useState<EndlessResult | null>(null);
@@ -57,7 +57,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const restart = useCallback(() => {
     if (run.stage.endless) clearEndless();
     setAttempt((a) => a + 1);
-    setRun(createRun(stageId));
+    setRun(createRun(stageId, progressStore.get().patchLevels));
     setReward(null);
     setEndlessResult(null);
     setView("fight");

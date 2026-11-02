@@ -1,6 +1,6 @@
 import { endlessWave, getStage, stageThreats, WAVES_PER_STAGE, type Stage, type WaveDef } from "@/data/stages";
 import type { PacketKindId } from "./kinds";
-import type { PatchId } from "./patches";
+import { patchValue, type PatchId } from "./patches";
 import { createRng, type Rng } from "./random";
 
 export type RunState = {
@@ -11,6 +11,7 @@ export type RunState = {
   uptime: number;
   maxUptime: number;
   patches: PatchId[];
+  levels: Partial<Record<PatchId, number>>;
   killSwitchSpent: number;
   dataEarned: number;
   dropped: number;
@@ -46,7 +47,7 @@ export function currentWave(run: RunState): WaveDef {
   return run.stage.endless ? endlessWave(run.wave) : run.waves[run.wave - 1];
 }
 
-export function createRun(stageId: number, seed = randomSeed()): RunState {
+export function createRun(stageId: number, levels: Partial<Record<PatchId, number>> = {}, seed = randomSeed()): RunState {
   const stage = getStage(stageId);
   if (!stage) throw new Error(`unknown stage ${stageId}`);
   const rng = createRng(seed);
@@ -58,6 +59,7 @@ export function createRun(stageId: number, seed = randomSeed()): RunState {
     uptime: 3,
     maxUptime: 3,
     patches: [],
+    levels: { ...levels },
     killSwitchSpent: 0,
     dataEarned: 0,
     dropped: 0,
@@ -71,6 +73,14 @@ export function createRun(stageId: number, seed = randomSeed()): RunState {
 
 export function hasPatch(run: RunState, id: PatchId): boolean {
   return run.patches.includes(id);
+}
+
+export function patchLevel(run: RunState, id: PatchId): number {
+  return run.levels[id] ?? 1;
+}
+
+export function patchPower(run: RunState, id: PatchId): number {
+  return hasPatch(run, id) ? patchValue(id, patchLevel(run, id)) : 0;
 }
 
 export function patchCount(run: RunState, id: PatchId): number {
@@ -92,7 +102,7 @@ export function starsFor(run: RunState): number {
 }
 
 export function dataMultiplier(run: RunState): number {
-  return hasPatch(run, "dataMiner") ? 1.25 : 1;
+  return 1 + patchPower(run, "dataMiner") / 100;
 }
 
 export function packetData(run: RunState): number {

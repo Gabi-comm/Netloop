@@ -4,7 +4,8 @@ import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec }
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
 import { buildCables, Layouts, type Cable, type NetworkLayout } from "./network";
 import { POP_MS, type Pop } from "./pops";
-import { currentWave, hasPatch, killSwitchCharges, type RunState } from "./runState";
+import { honeypotCooldownS, patchValue } from "./patches";
+import { currentWave, hasPatch, killSwitchCharges, patchLevel, patchPower, type RunState } from "./runState";
 import { durationMs, Sprites, type SpriteAnim } from "./sprites";
 import { buildWave, threatCount, type Spawn } from "./wavePlan";
 import type { SfxName } from "@/lib/sfx";
@@ -46,8 +47,6 @@ export type Hud = {
   briefing: PacketKindId | null;
 };
 
-const HONEYPOT_FREEZE_MS = 3000;
-const HONEYPOT_COOLDOWN_MS = 20000;
 const TROJAN_OPEN_AT = 0.72;
 const MITM_PEEL_AT = 0.65;
 
@@ -81,7 +80,7 @@ export class GameEngine {
   private readonly totalThreats: number;
   private resolvedThreats = 0;
   private nextId = 0;
-  private vpnCharge: boolean;
+  private vpnCharge: number;
   private freezeUntilMs = 0;
   private honeypotReadyAtMs = 0;
   private readonly known: Set<PacketKindId>;
@@ -99,7 +98,7 @@ export class GameEngine {
     this.layout = Layouts[run.stage.layout];
     this.score = run.score;
     this.uptime = run.uptime;
-    this.vpnCharge = hasPatch(run, "vpnTunnel");
+    this.vpnCharge = patchPower(run, "vpnTunnel");
     const def = currentWave(run);
     this.spawns = buildWave(def, this.layout.routes.length, run.rng);
     this.speed = def.speed ?? 1;
@@ -107,7 +106,11 @@ export class GameEngine {
   }
 
   get snapRadius(): number {
-    return 30 * this.scale * (hasPatch(this.run, "wideSnap") ? 1.4 : 1);
+    return 30 * this.scale * (1 + patchPower(this.run, "wideSnap") / 100);
+  }
+
+  private get honeypotCooldownMs(): number {
+    return honeypotCooldownS(patchLevel(this.run, "honeypot")) * 1000;
   }
 
   get isFrozen(): boolean {
@@ -123,7 +126,7 @@ export class GameEngine {
   }
 
   private get inkMax(): number {
-    return this.width * 1.8 * (hasPatch(this.run, "broadcast") ? 1.25 : 1);
+    return this.width * 1.8 * (1 + patchPower(this.run, "broadcast") / 100);
   }
 
   onHud(listener: ((hud: Hud) => void) | null) {
@@ -158,7 +161,7 @@ export class GameEngine {
       killSwitchCharges: killSwitchCharges(this.run),
       honeypotOwned,
       honeypotReady: honeypotOwned && this.clockMs >= this.honeypotReadyAtMs,
-      honeypotCooldown: honeypotOwned ? Math.max(0, (this.honeypotReadyAtMs - this.clockMs) / HONEYPOT_COOLDOWN_MS) : 0,
+      honeypotCooldown: honeypotOwned ? Math.max(0, (this.honeypotReadyAtMs - this.clockMs) / this.honeypotCooldownMs) : 0,
       briefing: this.briefings[0] ?? null,
     };
   }
@@ -211,7 +214,7 @@ export class GameEngine {
       return;
     }
 
-    const slow = this.drawing && hasPatch(this.run, "rateLimiter") ? 0.6 : 1;
+    const slow = this.drawing ? 1 - patchPower(this.run, "rateLimiter") / 100 : 1;
     const frozen = this.isFrozen;
     const opened: Packet[] = [];
 
@@ -254,7 +257,7 @@ export class GameEngine {
 
     for (const trojan of opened) this.releaseTrojan(trojan);
 
-    if (!this.drawing) this.bandwidth = Math.min(1, this.bandwidth + 0.35 * (hasPatch(this.run, "overclock") ? 1.5 : 1) * dt);
+    if (!this.drawing) this.bandwidth = Math.min(1, this.bandwidth + 0.35 * (1 + patchPower(this.run, "overclock") / 100) * dt);
     this.prune(this.effects, (e) => this.clockMs - e.startMs > Math.max(durationMs(e.anim), 200));
     this.prune(this.pops, (p) => this.clockMs - p.startMs > POP_MS);
     this.prune(this.popups, (p) => this.clockMs - p.startMs > (p.big ? 1400 : 900));
@@ -264,7 +267,7 @@ export class GameEngine {
   }
 
   private speedFactor(p: Packet): number {
-    if (p.kind.id === "zeroDay" && p.dashing) return 2.2;
+    if (p.kind.id === "zeroDay" && p.dashing) return 1.8;
     if (p.kind.id === "mitm" && p.progress < MITM_PEEL_AT) {
       let target: Packet | null = null;
       for (const q of this.packets) {
@@ -332,6 +335,8 @@ export class GameEngine {
     const dropped = this.packets.filter((p) => p.kind.isThreat);
     for (const p of dropped) this.drop(p, 1);
     this.removeAll(dropped);
+    const lockdownMs = patchValue("killSwitch", patchLevel(this.run, "killSwitch")) * 1000;
+    if (lockdownMs) this.freezeUntilMs = Math.max(this.freezeUntilMs, this.clockMs + lockdownMs);
     this.sfx("killSwitch");
     this.popups.push({ text: "KILL SWITCH", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: NetColors.threat, big: true });
     this.emitHud();
@@ -339,8 +344,8 @@ export class GameEngine {
 
   useHoneypot() {
     if (!hasPatch(this.run, "honeypot") || this.clockMs < this.honeypotReadyAtMs || this.phase !== "playing") return;
-    this.freezeUntilMs = this.clockMs + HONEYPOT_FREEZE_MS;
-    this.honeypotReadyAtMs = this.clockMs + HONEYPOT_COOLDOWN_MS;
+    this.freezeUntilMs = Math.max(this.freezeUntilMs, this.clockMs + patchPower(this.run, "honeypot") * 1000);
+    this.honeypotReadyAtMs = this.clockMs + this.honeypotCooldownMs;
     this.sfx("honeypot");
     this.popups.push({ text: "honeypot!", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: NetColors.epicLight, big: true });
     this.emitHud();
@@ -376,6 +381,12 @@ export class GameEngine {
   private reachServer(p: Packet) {
     if (p.kind.isThreat) {
       this.resolvedThreats++;
+      if (this.run.rng.next() * 100 < patchPower(this.run, "backupServer")) {
+        this.serverHappyAtMs = this.clockMs;
+        this.popups.push({ text: "backup held", at: this.serverPosition, startMs: this.clockMs, color: NetColors.rare });
+        this.sfx("vpn");
+        return;
+      }
       this.run.breaches.push(p.kind.id);
       this.uptime -= 1;
       this.combo = 1;
@@ -404,8 +415,8 @@ export class GameEngine {
     p.lastHitMs = this.clockMs;
     this.popups.push({ text: "zero-day!", at: p.position, startMs: this.clockMs, color: NetColors.pink });
     this.sfx("zeroDay");
-    if (this.vpnCharge) {
-      this.vpnCharge = false;
+    if (this.vpnCharge > 0) {
+      this.vpnCharge--;
       this.sfx("vpn");
       this.popups.push({ text: "VPN held", at: this.line[this.line.length - 1], startMs: this.clockMs, color: NetColors.rare });
     } else {
@@ -506,7 +517,10 @@ export class GameEngine {
     this.phase = "cleared";
     this.cancelLine();
     this.sfx("win");
-    if (hasPatch(this.run, "autoPatch")) this.uptime = Math.min(this.run.maxUptime, this.uptime + 1);
+    if (hasPatch(this.run, "autoPatch")) {
+      const regain = this.run.rng.next() * 100 < patchPower(this.run, "autoPatch") ? 2 : 1;
+      this.uptime = Math.min(this.run.maxUptime, this.uptime + regain);
+    }
     this.commitToRun();
   }
 

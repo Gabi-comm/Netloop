@@ -3,6 +3,7 @@ import type { PacketKindId } from "@/game/kinds";
 import type { PatchId } from "@/game/patches";
 import { createRun, randomSeed, type RunState } from "@/game/runState";
 import { createRng } from "@/game/random";
+import { progressStore } from "./progress";
 
 const KEY = "netloop.endlessRun.v1";
 
@@ -63,7 +64,7 @@ export function savedEndlessWave(): number | null {
 export function loadEndless(): { run: RunState; view: EndlessView } | null {
   const save = readSave();
   if (!save) return null;
-  const run = createRun(ENDLESS_ID);
+  const run = createRun(ENDLESS_ID, progressStore.get().patchLevels);
   run.wave = save.wave;
   run.score = save.score;
   run.uptime = save.uptime;

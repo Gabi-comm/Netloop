@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckIcon, DataIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { DataPill, Screen, TopBar } from "@/components/ui";
-import { patchItemKey, patchTag, RarityStyle, ShopPatches, type Patch } from "@/game/patches";
+import { describePatch, MAX_PATCH_LEVEL, patchItemKey, patchStat, patchTag, patchUnlocked, RarityStyle, ShopPatches, upgradeCost, type Patch } from "@/game/patches";
 import { ownsSkin, skinById, skinItemKey, SkinList, type Skin } from "@/game/skins";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { playSfx } from "@/lib/sfx";
@@ -36,28 +36,73 @@ function BuyButton({ price, balance, onBuy, name }: { price: number; balance: nu
   );
 }
 
-function PowerUpCard({ patch, owned, balance, onBuy }: { patch: Patch; owned: boolean; balance: number; onBuy: () => void }) {
-  const price = patch.price ?? 0;
-  const rarity = RarityStyle[patch.rarity];
+function LevelPips({ level }: { level: number }) {
   return (
-    <li className={`${styles.card} ${owned ? styles.owned : ""}`}>
-      <div className={styles.icon}>
-        <Sprite anim={patch.icon} size={64} />
+    <span className={styles.pips} aria-hidden="true">
+      {Array.from({ length: MAX_PATCH_LEVEL }, (_, i) => (
+        <span key={i} className={`${styles.pip} ${i < level ? styles.pipOn : ""}`} />
+      ))}
+    </span>
+  );
+}
+
+function UpgradeButton({ price, balance, onUpgrade, name, next }: { price: number; balance: number; onUpgrade: () => void; name: string; next: number }) {
+  return (
+    <button
+      type="button"
+      className={`${styles.action} ${styles.buy} ${styles.upgrade}`}
+      disabled={balance < price}
+      onClick={onUpgrade}
+      aria-label={`Upgrade ${name} to level ${next} for ${price} data`}
+    >
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16">
+        <path d="M3 11 L8 5 L13 11" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <Price price={price} />
+    </button>
+  );
+}
+
+function PowerUpCard({
+  patch, owned, level, balance, onBuy, onUpgrade,
+}: { patch: Patch; owned: boolean; level: number; balance: number; onBuy: () => void; onUpgrade: () => void }) {
+  const rarity = RarityStyle[patch.rarity];
+  const maxed = owned && level >= MAX_PATCH_LEVEL;
+  const cost = owned ? upgradeCost(patch, level) : patch.price ?? 0;
+  return (
+    <li className={`${styles.card} ${styles.skinCard} ${owned ? styles.owned : ""} ${maxed ? styles.maxed : ""}`}>
+      <div className={styles.skinTop}>
+        <div className={styles.icon}>
+          <Sprite anim={patch.icon} size={64} />
+        </div>
+        <div className={styles.text}>
+          <span className={styles.tag} style={{ color: rarity.color }}>{patchTag(patch)}</span>
+          <span className={styles.title}>{patch.title}</span>
+          <span className={styles.desc}>{describePatch(patch.id, level)}</span>
+          {owned && !maxed && <span className={styles.next}>LV {level + 1}: {patchStat(patch.id, level + 1)}</span>}
+          {!maxed && balance < cost && <span className={styles.need}>need {cost - balance} more data</span>}
+        </div>
       </div>
-      <div className={styles.text}>
-        <span className={styles.tag} style={{ color: rarity.color }}>{patchTag(patch)}</span>
-        <span className={styles.title}>{patch.title}</span>
-        <span className={styles.desc}>{patch.description}</span>
-        {!owned && balance < price && <span className={styles.need}>need {price - balance} more data</span>}
-      </div>
-      <div className={styles.side}>
-        {owned ? (
+      <div className={styles.skinBottom}>
+        <span className={styles.levelRow}>
+          {owned ? (
+            <>
+              <LevelPips level={level} />
+              <span className={styles.levelLabel}>{maxed ? "MAX LEVEL" : `LV ${level} / ${MAX_PATCH_LEVEL}`}</span>
+            </>
+          ) : (
+            <span className={styles.lockedNote}>unlock to upgrade</span>
+          )}
+        </span>
+        {maxed ? (
           <span className={`${styles.action} ${styles.done}`}>
             <CheckIcon size={18} color="var(--legit)" />
-            owned
+            maxed
           </span>
+        ) : owned ? (
+          <UpgradeButton price={cost} balance={balance} onUpgrade={onUpgrade} name={patch.title} next={level + 1} />
         ) : (
-          <BuyButton price={price} balance={balance} onBuy={onBuy} name={patch.title} />
+          <BuyButton price={cost} balance={balance} onBuy={onBuy} name={patch.title} />
         )}
       </div>
     </li>
@@ -124,6 +169,13 @@ export function ShopScreen() {
     }
   };
 
+  const upgradePatch = (patch: Patch, level: number) => {
+    if (progressStore.upgradePatch(patch.id, upgradeCost(patch, level), MAX_PATCH_LEVEL)) {
+      playSfx("upgrade", level + 1);
+      setMessage(level + 1 >= MAX_PATCH_LEVEL ? `${patch.title} maxed out!` : `${patch.title} upgraded to level ${level + 1}!`);
+    }
+  };
+
   const glitchIn = (skin: Skin, delayMs: number) => {
     if (!skin.teleport) return;
     playSfx("glitch", 0, delayMs);
@@ -167,15 +219,20 @@ export function ShopScreen() {
 
       <ul className={styles.list} role="tabpanel" id={`shop-panel-${tab}`} aria-labelledby={`shop-tab-${tab}`}>
         {tab === "powerups"
-          ? ShopPatches.map((patch) => (
-              <PowerUpCard
-                key={patch.id}
-                patch={patch}
-                owned={inventory.includes(patchItemKey(patch.id))}
-                balance={balance}
-                onBuy={() => buyPatch(patch)}
-              />
-            ))
+          ? ShopPatches.map((patch) => {
+              const level = hydrated ? progress.patchLevels[patch.id] ?? 1 : 1;
+              return (
+                <PowerUpCard
+                  key={patch.id}
+                  patch={patch}
+                  owned={patchUnlocked(patch, inventory)}
+                  level={level}
+                  balance={balance}
+                  onBuy={() => buyPatch(patch)}
+                  onUpgrade={() => upgradePatch(patch, level)}
+                />
+              );
+            })
           : SkinList.map((skin) => (
               <SkinCard
                 key={skin.id}
