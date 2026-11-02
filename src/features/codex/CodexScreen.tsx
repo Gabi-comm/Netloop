@@ -6,6 +6,7 @@ import { DataPill, Screen, TopBar } from "@/components/ui";
 import { CodexKinds, type PacketKind } from "@/game/kinds";
 import { Patches, patchSeenKey, patchTag, RarityStyle, type Patch } from "@/game/patches";
 import { useHydrated, useProgress } from "@/lib/progress";
+import { playSfx } from "@/lib/sfx";
 import styles from "./codex.module.css";
 
 type TabId = "enemies" | "upgrades";
@@ -91,7 +92,7 @@ export function CodexScreen() {
       <TopBar title="CODEX" right={<DataPill />} />
 
       <div className={styles.tabs} role="tablist" aria-label="Codex sections">
-        {TABS.map((t) => (
+        {TABS.map((t, i) => (
           <button
             key={t.id}
             type="button"
@@ -100,7 +101,11 @@ export function CodexScreen() {
             aria-selected={tab === t.id}
             aria-controls={`codex-panel-${t.id}`}
             className={`${styles.tab} ${tab === t.id ? styles.tabActive : ""}`}
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              if (t.id === tab) return;
+              playSfx("page", i);
+              setTab(t.id);
+            }}
           >
             {t.label}
           </button>

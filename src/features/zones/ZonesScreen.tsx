@@ -8,6 +8,7 @@ import { ChunkyLink, DataPill, Screen, Sheet, TopBar } from "@/components/ui";
 import { Stages, stageThreats, WAVES_PER_STAGE, type Stage } from "@/data/stages";
 import { PacketKinds } from "@/game/kinds";
 import { clearedCount, isStageUnlocked, nextStageId, progressStore, useHydrated, useProgress, type Progress } from "@/lib/progress";
+import { playSfx } from "@/lib/sfx";
 import { ZoneBadge, ZoneScene } from "./ZoneScenes";
 import styles from "./zones.module.css";
 
@@ -110,6 +111,7 @@ export function ZonesScreen() {
 
   useEffect(() => {
     if (celebrate === null) return;
+    playSfx("unlock", 1, 300);
     const t = window.setTimeout(() => setCelebrate(null), 2600);
     return () => window.clearTimeout(t);
   }, [celebrate]);
@@ -193,7 +195,10 @@ export function ZonesScreen() {
                       nodeRefs.current[index] = el;
                     }}
                     className={`${styles.node} ${styles[state]} ${isCurrent ? styles.current : ""} ${popping ? styles.pop : ""}`}
-                    onClick={() => setSelected(stage)}
+                    onClick={() => {
+                      playSfx(state === "locked" ? "locked" : "zone", stage.id);
+                      setSelected(stage);
+                    }}
                     aria-label={`Zone ${stage.id}, ${stage.name}, ${state === "locked" ? "locked" : state === "cleared" ? "cleared" : "ready"}`}
                   >
                     <ZoneBadge layout={stage.layout} />
@@ -235,7 +240,7 @@ export function ZonesScreen() {
         </ol>
       </div>
 
-      <Link href="/endless" className={styles.beyond}>
+      <Link href="/endless" className={styles.beyond} onClick={() => playSfx("zone", 8)}>
         <svg aria-hidden="true" className={styles.beyondArt} viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice">
           <rect width="360" height="120" fill="#1b1830" />
           <g fill="#b39af0">

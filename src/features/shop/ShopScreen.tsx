@@ -7,6 +7,7 @@ import { DataPill, Screen, TopBar } from "@/components/ui";
 import { patchItemKey, patchTag, RarityStyle, ShopPatches, type Patch } from "@/game/patches";
 import { ownsSkin, skinById, skinItemKey, SkinList, type Skin } from "@/game/skins";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
+import { playSfx } from "@/lib/sfx";
 import { LinePreview } from "./LinePreview";
 import styles from "./shop.module.css";
 
@@ -117,12 +118,16 @@ export function ShopScreen() {
   }, [message]);
 
   const buyPatch = (patch: Patch) => {
-    if (progressStore.buyItem(patchItemKey(patch.id), patch.price ?? 0)) setMessage(`${patch.title} unlocked!`);
+    if (progressStore.buyItem(patchItemKey(patch.id), patch.price ?? 0)) {
+      playSfx("buy");
+      setMessage(`${patch.title} unlocked!`);
+    }
   };
 
   const buySkin = (skin: Skin) => {
     if (progressStore.buyItem(skinItemKey(skin.id), skin.price)) {
       progressStore.equipSkin(skin.id);
+      playSfx("buy");
       setMessage(`${skin.title} unlocked and equipped!`);
     }
   };
@@ -141,7 +146,10 @@ export function ShopScreen() {
             aria-selected={tab === t.id}
             aria-controls={`shop-panel-${t.id}`}
             className={`${styles.tab} ${tab === t.id ? styles.tabActive : ""}`}
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              if (tab !== t.id) playSfx("tap");
+              setTab(t.id);
+            }}
           >
             {t.label}
           </button>
@@ -169,7 +177,10 @@ export function ShopScreen() {
                 equipped={equipped === skin.id}
                 balance={balance}
                 onBuy={() => buySkin(skin)}
-                onEquip={() => progressStore.equipSkin(skin.id)}
+                onEquip={() => {
+                  playSfx("equip");
+                  progressStore.equipSkin(skin.id);
+                }}
               />
             ))}
       </ul>

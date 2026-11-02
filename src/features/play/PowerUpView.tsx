@@ -7,6 +7,7 @@ import { ChunkyButton, DashedRule, UptimeBars } from "@/components/ui";
 import { offerPatches, patchSeenKey, patchTag, RarityStyle, type Patch } from "@/game/patches";
 import { rerollCost, type RunState } from "@/game/runState";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
+import { playSfx } from "@/lib/sfx";
 import { PATCH_INTRO_TIP, PatchIntro } from "./PatchIntro";
 import styles from "./play.module.css";
 
@@ -34,6 +35,7 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
     } else {
       setFreeUsed(true);
     }
+    playSfx("reroll");
     setOffers(offerPatches(run.patches, run.rng, 3, progressStore.get().inventory));
     setPicked(null);
   };
@@ -64,7 +66,10 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
                 type="button"
                 aria-pressed={selected}
                 className={`${styles.card} ${selected ? styles.cardSelected : ""}`}
-                onClick={() => setPicked(i)}
+                onClick={() => {
+                  if (picked !== i) playSfx("pick", RarityStyle[patch.rarity].order);
+                  setPicked(i);
+                }}
               >
                 <div className={styles.cardIcon}>
                   <Sprite anim={patch.icon} size={64} />
@@ -93,7 +98,10 @@ export function PowerUpView({ run, onInstall }: { run: RunState; onInstall: (pat
       <div className={styles.installWrap}>
         <ChunkyButton
           disabled={offers.length > 0 && picked === null}
-          onClick={() => onInstall(picked === null ? null : offers[picked])}
+          onClick={() => {
+            if (picked !== null) playSfx("install");
+            onInstall(picked === null ? null : offers[picked]);
+          }}
         >
           {offers.length === 0 ? "CONTINUE" : "INSTALL PATCH"}
         </ChunkyButton>

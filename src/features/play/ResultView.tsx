@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { DataIcon, StarIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { ChunkyButton, DashedRule } from "@/components/ui";
@@ -7,6 +8,8 @@ import { getStage, Stages } from "@/data/stages";
 import { PacketKinds, type PacketKindId } from "@/game/kinds";
 import type { RunState } from "@/game/runState";
 import type { EndlessRecord } from "@/lib/progress";
+import { music } from "@/lib/music";
+import { playSfx } from "@/lib/sfx";
 import { BitHappy } from "./BitHappy";
 import { BitShutdown } from "./BitShutdown";
 import styles from "./play.module.css";
@@ -15,6 +18,9 @@ export type StageReward = { stars: number; stageReward: number; packetData: numb
 
 export function ZoneClearedView({ run, reward, onContinue, onReplay }: { run: RunState; reward: StageReward; onContinue: () => void; onReplay: () => void }) {
   const next = getStage(run.stage.id + 1);
+  useEffect(() => {
+    for (let i = 0; i < reward.stars; i++) playSfx("star", i, 700 + i * 220);
+  }, [reward.stars]);
   return (
     <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>
@@ -25,7 +31,7 @@ export function ZoneClearedView({ run, reward, onContinue, onReplay }: { run: Ru
 
       <div className={styles.stars} aria-label={`${reward.stars} of 3 stars`}>
         {[0, 1, 2].map((i) => (
-          <span key={i} className={styles.star} style={{ animationDelay: `${250 + i * 220}ms` }}>
+          <span key={i} className={styles.star} style={{ animationDelay: `${700 + i * 220}ms` }}>
             <StarIcon size={58} filled={i < reward.stars} />
           </span>
         ))}
@@ -89,6 +95,14 @@ export function NetworkDownView({ run, endless, onRetry, onQuit }: { run: RunSta
   const breaches = groupBreaches(run.breaches);
   const newBest = endless !== undefined && run.score > endless.previous.bestScore && run.score > 0;
   const highScore = endless ? Math.max(run.score, endless.previous.bestScore) : 0;
+  useEffect(() => {
+    playSfx("shutdown", 1, 150);
+    const t = window.setTimeout(() => music.duck(false), 4000);
+    return () => {
+      window.clearTimeout(t);
+      music.duck(false);
+    };
+  }, []);
   return (
     <main className={`${styles.page} ${styles.pageFit}`}>
       <div className={styles.pageHead}>

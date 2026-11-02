@@ -62,7 +62,7 @@ export const PacketKinds: Record<PacketKindId, PacketKind> = {
   },
   trojan: {
     id: "trojan", label: "Trojan", caption: "opens near server", howTo: "drop it early or it opens into two malware",
-    isThreat: true, hp: 1, speed: 0.055, points: 180, size: 46, walk: Sprites.trojan_idle, codex: true,
+    isThreat: true, hp: 1, speed: 0.085, points: 180, size: 46, walk: Sprites.trojan_idle, codex: true,
   },
   mitm: {
     id: "mitm", label: "Man in the Middle", caption: "hides by legit", howTo: "tails a legit packet. loop it without the friend",

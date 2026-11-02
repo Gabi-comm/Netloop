@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useProgress, useHydrated } from "@/lib/progress";
+import { playSfx } from "@/lib/sfx";
 import { BackIcon, DataIcon } from "./Icons";
 import styles from "./ui.module.css";
 
@@ -62,7 +63,7 @@ export function DataPill() {
 
 export function IconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
   return (
-    <Link href={href} aria-label={label} className={styles.iconButton}>
+    <Link href={href} aria-label={label} className={styles.iconButton} onClick={() => playSfx("tap")}>
       {children}
     </Link>
   );
@@ -70,7 +71,15 @@ export function IconLink({ href, label, children }: { href: string; label: strin
 
 export function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} onClick={onClick} className={styles.iconButton}>
+    <button
+      type="button"
+      aria-label={label}
+      onClick={() => {
+        playSfx("tap");
+        onClick();
+      }}
+      className={styles.iconButton}
+    >
       {children}
     </button>
   );
@@ -106,7 +115,7 @@ export function ChunkyLink({
     );
   }
   return (
-    <Link href={href} className={chunkyClass(tone, size)}>
+    <Link href={href} className={chunkyClass(tone, size)} onClick={() => playSfx("tap")}>
       {children}
     </Link>
   );
@@ -116,7 +125,15 @@ export function ChunkyButton({
   onClick, children, tone = "pink", size = "normal", disabled = false,
 }: { onClick: () => void; children: ReactNode; tone?: ChunkyTone; size?: ChunkySize; disabled?: boolean }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={chunkyClass(tone, size)}>
+    <button
+      type="button"
+      onClick={() => {
+        playSfx("tap");
+        onClick();
+      }}
+      disabled={disabled}
+      className={chunkyClass(tone, size)}
+    >
       {children}
     </button>
   );
@@ -160,6 +177,14 @@ export function Chip({ children }: { children: ReactNode }) {
 
 export function Soon() {
   return <span className={styles.soon}>soon</span>;
+}
+
+export function Toggle({ on, onChange, label }: { on: boolean; onChange: (on: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`${styles.toggle} ${on ? styles.toggleOn : ""}`} onClick={() => onChange(!on)}>
+      <span className={styles.toggleKnob} />
+    </button>
+  );
 }
 
 export function Sheet({ open, onClose, label, children }: { open: boolean; onClose: () => void; label: string; children: ReactNode }) {

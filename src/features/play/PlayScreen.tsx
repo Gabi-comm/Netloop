@@ -7,6 +7,7 @@ import { applyInstallEffects, createRun, packetData, starsFor, type RunState } f
 import { SpriteCache } from "@/game/renderer";
 import type { Patch } from "@/game/patches";
 import { isStageUnlocked, progressStore, useHydrated, useProgress } from "@/lib/progress";
+import { IrisReveal } from "./ClearCelebration";
 import { FightView } from "./FightView";
 import { PowerUpView } from "./PowerUpView";
 import { NetworkDownView, ZoneClearedView, type EndlessResult, type StageReward } from "./ResultView";
@@ -33,6 +34,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const [endlessResult, setEndlessResult] = useState<EndlessResult | null>(null);
   const [sprites] = useState(() => new SpriteCache());
   const [ready, setReady] = useState(false);
+  const [revealKey, setRevealKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -67,6 +69,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   }, [run]);
 
   const onCleared = useCallback(() => {
+    setRevealKey((k) => k + 1);
     if (run.wave < run.maxWaves) {
       setView("powerup");
       return;
@@ -97,24 +100,33 @@ export function PlayScreen({ stageId }: { stageId: number }) {
     );
   }
 
-  switch (view) {
-    case "fight":
-      return (
-        <FightView
-          key={`${attempt}-${run.wave}`}
-          run={run}
-          sprites={sprites}
-          onCleared={onCleared}
-          onLost={onLost}
-          onRestart={restart}
-          onQuit={quit}
-        />
-      );
-    case "powerup":
-      return <PowerUpView key={`${attempt}-${run.wave}`} run={run} onInstall={onInstall} />;
-    case "cleared":
-      return <ZoneClearedView run={run} reward={reward!} onContinue={quit} onReplay={restart} />;
-    case "lost":
-      return <NetworkDownView run={run} endless={endlessResult ?? undefined} onRetry={restart} onQuit={quit} />;
+  return (
+    <>
+      {renderView()}
+      {revealKey > 0 && <IrisReveal key={revealKey} />}
+    </>
+  );
+
+  function renderView() {
+    switch (view) {
+      case "fight":
+        return (
+          <FightView
+            key={`${attempt}-${run.wave}`}
+            run={run}
+            sprites={sprites}
+            onCleared={onCleared}
+            onLost={onLost}
+            onRestart={restart}
+            onQuit={quit}
+          />
+        );
+      case "powerup":
+        return <PowerUpView key={`${attempt}-${run.wave}`} run={run} onInstall={onInstall} />;
+      case "cleared":
+        return <ZoneClearedView run={run} reward={reward!} onContinue={quit} onReplay={restart} />;
+      case "lost":
+        return <NetworkDownView run={run} endless={endlessResult ?? undefined} onRetry={restart} onQuit={quit} />;
+    }
   }
 }

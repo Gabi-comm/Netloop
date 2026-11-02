@@ -10,7 +10,10 @@ import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import { currentWave, type RunState } from "@/game/runState";
 import { skinById } from "@/game/skins";
 import { progressStore } from "@/lib/progress";
+import { music } from "@/lib/music";
+import { playSfx, unlockAudio } from "@/lib/sfx";
 import { BandwidthMeter } from "./BandwidthMeter";
+import { CLEAR_MS, ClearCelebration } from "./ClearCelebration";
 import { EnemyBriefing } from "./EnemyBriefing";
 import { PatchStrip } from "./PatchStrip";
 import { ZoneBackdrop } from "./ZoneBackdrop";
@@ -41,7 +44,11 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
   useEffect(() => {
     engine.onHud(setHud);
-    return () => engine.onHud(null);
+    engine.onSfx(playSfx);
+    return () => {
+      engine.onHud(null);
+      engine.onSfx(null);
+    };
   }, [engine]);
 
   useEffect(() => {
@@ -97,10 +104,11 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
   useEffect(() => {
     if (hud.phase === "cleared") {
-      const t = window.setTimeout(() => callbacks.current.onCleared(), 1100);
+      const t = window.setTimeout(() => callbacks.current.onCleared(), CLEAR_MS);
       return () => window.clearTimeout(t);
     }
     if (hud.phase === "lost") {
+      music.duck(true);
       const t = window.setTimeout(() => callbacks.current.onLost(), 900);
       return () => window.clearTimeout(t);
     }
@@ -127,6 +135,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
   const onPointerDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
+    unlockAudio();
     engine.startLine(toLocal(e));
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -276,9 +285,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
       </div>
 
       {hud.phase === "cleared" && (
-        <div className={styles.clearFlash}>
-          <h2>{run.wave === run.maxWaves ? "ZONE CLEAR!" : "WAVE CLEAR!"}</h2>
-        </div>
+        <ClearCelebration title={run.wave === run.maxWaves ? "CONGRATULATIONS!" : "WAVE CLEAR!"} />
       )}
 
       {hud.phase === "briefing" && hud.briefing && (

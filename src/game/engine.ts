@@ -7,6 +7,7 @@ import { POP_MS, type Pop } from "./pops";
 import { currentWave, hasPatch, killSwitchCharges, type RunState } from "./runState";
 import { durationMs, Sprites, type SpriteAnim } from "./sprites";
 import { buildWave, threatCount, type Spawn } from "./wavePlan";
+import type { SfxName } from "@/lib/sfx";
 
 export type FightPhase = "playing" | "paused" | "briefing" | "cleared" | "lost";
 
@@ -86,6 +87,7 @@ export class GameEngine {
   private readonly speed: number;
   private readonly briefings: PacketKindId[] = [];
   private hudListener: ((hud: Hud) => void) | null = null;
+  private sfxListener: ((name: SfxName, level?: number) => void) | null = null;
   private lastHudKey = "";
 
   constructor(run: RunState, known: Iterable<PacketKindId> = []) {
@@ -126,6 +128,14 @@ export class GameEngine {
     this.hudListener = listener;
     this.lastHudKey = "";
     this.emitHud();
+  }
+
+  onSfx(listener: ((name: SfxName, level?: number) => void) | null) {
+    this.sfxListener = listener;
+  }
+
+  private sfx(name: SfxName, level?: number) {
+    this.sfxListener?.(name, level);
   }
 
   hud(): Hud {
@@ -193,6 +203,7 @@ export class GameEngine {
     if (this.briefings.length) {
       this.phase = "briefing";
       this.cancelLine();
+      this.sfx("briefing");
       this.emitHud();
       return;
     }
@@ -220,6 +231,7 @@ export class GameEngine {
       if (p.kind.id === "trojan" && p.progress >= TROJAN_OPEN_AT) {
         p.openingAtMs = this.clockMs;
         this.popups.push({ text: "trojan!", at: p.position, startMs: this.clockMs, color: NetColors.points });
+        this.sfx("trojan");
         continue;
       }
 
@@ -278,11 +290,13 @@ export class GameEngine {
     if (this.phase !== "playing") return;
     if (this.bandwidth < 0.05) {
       this.popups.push({ text: "no bandwidth!", at, startMs: this.clockMs, color: NetColors.data });
+      this.sfx("noBandwidth");
       return;
     }
     this.line.length = 0;
     this.line.push(at);
     this.drawing = true;
+    this.sfx("draw");
   }
 
   extendLine(at: Vec) {
@@ -315,6 +329,7 @@ export class GameEngine {
     const dropped = this.packets.filter((p) => p.kind.isThreat);
     for (const p of dropped) this.drop(p, 1);
     this.removeAll(dropped);
+    this.sfx("killSwitch");
     this.popups.push({ text: "KILL SWITCH", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: NetColors.threat, big: true });
     this.emitHud();
   }
@@ -323,6 +338,7 @@ export class GameEngine {
     if (!hasPatch(this.run, "honeypot") || this.clockMs < this.honeypotReadyAtMs || this.phase !== "playing") return;
     this.freezeUntilMs = this.clockMs + HONEYPOT_FREEZE_MS;
     this.honeypotReadyAtMs = this.clockMs + HONEYPOT_COOLDOWN_MS;
+    this.sfx("honeypot");
     this.popups.push({ text: "honeypot!", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: NetColors.epicLight, big: true });
     this.emitHud();
   }
@@ -362,9 +378,11 @@ export class GameEngine {
       this.combo = 1;
       this.serverHurtAtMs = this.clockMs;
       this.popups.push({ text: "-1 uptime", at: this.serverPosition, startMs: this.clockMs, color: NetColors.threat });
+      this.sfx("breach");
       if (this.uptime <= 0) {
         this.uptime = 0;
         this.phase = "lost";
+        this.sfx("lost");
         this.cancelLine();
         this.commitToRun();
         this.emitHud();
@@ -373,14 +391,17 @@ export class GameEngine {
       this.score += p.kind.points;
       this.run.dataEarned += 1;
       this.popups.push({ text: `+${p.kind.points}`, at: this.serverPosition, startMs: this.clockMs, color: NetColors.legit });
+      this.sfx("deliver");
     }
   }
 
   private zeroDayHit(p: Packet) {
     p.lastHitMs = this.clockMs;
     this.popups.push({ text: "zero-day!", at: p.position, startMs: this.clockMs, color: NetColors.pink });
+    this.sfx("zeroDay");
     if (this.vpnCharge) {
       this.vpnCharge = false;
+      this.sfx("vpn");
       this.popups.push({ text: "VPN held", at: this.line[this.line.length - 1], startMs: this.clockMs, color: NetColors.rare });
     } else {
       this.breakLine(p.position);
@@ -428,15 +449,21 @@ export class GameEngine {
       this.spawnChild("wormMini", w.cable, w.progress - 0.08);
       this.popups.push({ text: "split!", at: w.position, startMs: this.clockMs + 120, color: NetColors.epicLight });
     }
+    if (worms.length) this.sfx("split");
 
     if (hitLegit) {
       this.combo = 1;
       this.score = Math.max(0, this.score - 50);
       this.popups.push({ text: "-50 legit!", at: centroid(loop), startMs: this.clockMs, color: NetColors.threat });
+      this.sfx("legitHit");
     } else if (dropped > 0) {
+      this.sfx("loop", this.combo);
       this.combo = Math.min(this.combo + 1, 5);
     } else if (cracked) {
       this.popups.push({ text: "cracked!", at: centroid(loop), startMs: this.clockMs, color: NetColors.points });
+      this.sfx("cracked");
+    } else {
+      this.sfx("miss");
     }
   }
 
@@ -459,6 +486,7 @@ export class GameEngine {
 
   private breakLine(at: Vec, reason?: string) {
     this.effects.push({ anim: Sprites.fx_line_break, at, startMs: this.clockMs, size: 60 * this.scale });
+    this.sfx("lineBreak");
     if (reason) this.popups.push({ text: reason, at, startMs: this.clockMs, color: NetColors.muted });
     this.combo = 1;
     this.cancelLine();
@@ -472,6 +500,7 @@ export class GameEngine {
   private finishWave() {
     this.phase = "cleared";
     this.cancelLine();
+    this.sfx("win");
     if (hasPatch(this.run, "autoPatch")) this.uptime = Math.min(this.run.maxUptime, this.uptime + 1);
     this.commitToRun();
   }
