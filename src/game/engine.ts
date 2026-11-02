@@ -546,7 +546,7 @@ export class GameEngine {
       case "zeroDay":
         return p.dashing ? Sprites.zero_day_dash : p.kind.walk;
       case "spoofer":
-        return (this.clockMs - p.bornMs) % 1800 > 1350 ? Sprites.spoofer_walk : Sprites.legit_walk;
+        return (this.clockMs - p.bornMs) % 900 > 650 ? Sprites.spoofer_walk : Sprites.legit_walk;
       default:
         return p.kind.walk;
     }
