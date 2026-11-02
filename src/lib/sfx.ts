@@ -57,6 +57,7 @@ let bus: AudioNode | null = null;
 let dry: GainNode | null = null;
 let wet: GainNode | null = null;
 let noiseBuffer: AudioBuffer | null = null;
+let lowPower: boolean | null = null;
 const lastPlayed = new Map<SfxName, number>();
 const listeners = new Set<() => void>();
 
@@ -72,10 +73,16 @@ function loadSetting() {
   }
 }
 
+export function lowPowerAudio() {
+  if (lowPower === null) lowPower = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  return lowPower;
+}
+
 export function roomImpulse(ac: AudioContext, seconds: number) {
-  const len = Math.floor(ac.sampleRate * seconds);
-  const buf = ac.createBuffer(2, len, ac.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
+  const channels = lowPowerAudio() ? 1 : 2;
+  const len = Math.floor(ac.sampleRate * (lowPowerAudio() ? Math.min(seconds, 1.2) * 0.75 : seconds));
+  const buf = ac.createBuffer(channels, len, ac.sampleRate);
+  for (let ch = 0; ch < channels; ch++) {
     const data = buf.getChannelData(ch);
     for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
   }
@@ -87,14 +94,20 @@ function audio(): AudioContext | null {
   if (!ctx) {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctor) return null;
-    ctx = new Ctor();
+    ctx = new Ctor({ latencyHint: lowPowerAudio() ? "balanced" : "interactive" });
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -16;
     comp.ratio.value = 3;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -3;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.12;
     const warm = ctx.createBiquadFilter();
     warm.type = "lowpass";
     warm.frequency.value = 5200;
-    warm.connect(comp).connect(ctx.destination);
+    warm.connect(comp).connect(limiter).connect(ctx.destination);
     bus = warm;
     master = ctx.createGain();
     master.gain.value = volume * volume * MASTER_GAIN;

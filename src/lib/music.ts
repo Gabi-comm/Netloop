@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { audioGraph, roomImpulse } from "./sfx";
+import { audioGraph, lowPowerAudio, roomImpulse } from "./sfx";
 
 const KEY = "netloop.music.v1";
 const VOLUME_KEY = "netloop.musicVolume.v1";
@@ -72,7 +72,7 @@ function crystal(ac: AudioContext, dest: AudioNode, freq: number, t: number, vol
     [2.76, 0.16, 0],
     [5.4, 0.05, 0],
   ];
-  for (const [ratio, amp, detune] of partials) {
+  for (const [ratio, amp, detune] of lowPowerAudio() ? partials.slice(0, 3) : partials) {
     const osc = ac.createOscillator();
     const gain = ac.createGain();
     osc.type = "sine";
