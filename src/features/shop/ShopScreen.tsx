@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckIcon, DataIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { DataPill, Screen, TopBar } from "@/components/ui";
+import { ItemList, MAX_ITEM_STOCK, type Item } from "@/game/items";
 import { describePatch, MAX_PATCH_LEVEL, patchItemKey, patchStat, patchTag, patchUnlocked, RarityStyle, ShopPatches, upgradeCost, type Patch } from "@/game/patches";
 import { ownsSkin, skinById, skinItemKey, SkinList, type Skin } from "@/game/skins";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
@@ -11,10 +12,11 @@ import { playSfx } from "@/lib/sfx";
 import { LinePreview } from "./LinePreview";
 import styles from "./shop.module.css";
 
-type TabId = "powerups" | "skins";
+type TabId = "patches" | "items" | "skins";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "powerups", label: "PATCHES" },
+  { id: "patches", label: "PATCHES" },
+  { id: "items", label: "POWERUPS" },
   { id: "skins", label: "SKINS" },
 ];
 
@@ -109,6 +111,39 @@ function PowerUpCard({
   );
 }
 
+function ItemCard({ item, stock, balance, onBuy }: { item: Item; stock: number; balance: number; onBuy: () => void }) {
+  const rarity = RarityStyle[item.rarity];
+  const full = stock >= MAX_ITEM_STOCK;
+  return (
+    <li className={`${styles.card} ${styles.skinCard} ${stock > 0 ? styles.owned : ""}`}>
+      <div className={styles.skinTop}>
+        <div className={styles.icon}>
+          <Sprite anim={item.icon} size={64} />
+        </div>
+        <div className={styles.text}>
+          <span className={styles.tag} style={{ color: rarity.color }}>{rarity.label} · 1 USE</span>
+          <span className={styles.title}>{item.title}</span>
+          <span className={styles.desc}>{item.description}</span>
+          {!full && balance < item.price && <span className={styles.need}>need {item.price - balance} more data</span>}
+        </div>
+      </div>
+      <div className={styles.skinBottom}>
+        <span className={styles.levelRow}>
+          <span className={styles.levelLabel}>in your bag: {stock} / {MAX_ITEM_STOCK}</span>
+        </span>
+        {full ? (
+          <span className={`${styles.action} ${styles.done}`}>
+            <CheckIcon size={18} color="var(--legit)" />
+            full
+          </span>
+        ) : (
+          <BuyButton price={item.price} balance={balance} onBuy={onBuy} name={item.title} />
+        )}
+      </div>
+    </li>
+  );
+}
+
 function SkinCard({
   skin, owned, equipped, balance, onBuy, onEquip,
 }: { skin: Skin; owned: boolean; equipped: boolean; balance: number; onBuy: () => void; onEquip: () => void }) {
@@ -147,7 +182,7 @@ function SkinCard({
 }
 
 export function ShopScreen() {
-  const [tab, setTab] = useState<TabId>("powerups");
+  const [tab, setTab] = useState<TabId>("patches");
   const [message, setMessage] = useState<string | null>(null);
   const progress = useProgress();
   const hydrated = useHydrated();
@@ -166,6 +201,13 @@ export function ShopScreen() {
     if (progressStore.buyItem(patchItemKey(patch.id), patch.price ?? 0)) {
       playSfx("buy");
       setMessage(`${patch.title} unlocked!`);
+    }
+  };
+
+  const buyItemStock = (item: Item, stock: number) => {
+    if (progressStore.buyConsumable(item.id, item.price, MAX_ITEM_STOCK)) {
+      playSfx("buy");
+      setMessage(`${item.title} added! you have ${stock + 1}`);
     }
   };
 
@@ -218,7 +260,12 @@ export function ShopScreen() {
       <p className={styles.toast} role="status" aria-live="polite">{message ?? " "}</p>
 
       <ul className={styles.list} role="tabpanel" id={`shop-panel-${tab}`} aria-labelledby={`shop-tab-${tab}`}>
-        {tab === "powerups"
+        {tab === "items"
+          ? ItemList.map((item) => {
+              const stock = hydrated ? progress.consumables[item.id] ?? 0 : 0;
+              return <ItemCard key={item.id} item={item} stock={stock} balance={balance} onBuy={() => buyItemStock(item, stock)} />;
+            })
+          : tab === "patches"
           ? ShopPatches.map((patch) => {
               const level = hydrated ? progress.patchLevels[patch.id] ?? 1 : 1;
               return (

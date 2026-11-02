@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ENDLESS_ID, endlessReward } from "@/data/stages";
 import { applyInstallEffects, createRun, packetData, starsFor, type RunState } from "@/game/runState";
+import { ownedItems } from "@/game/items";
 import { SpriteCache } from "@/game/renderer";
 import type { Patch } from "@/game/patches";
 import { clearEndless, loadEndless, saveEndless } from "@/lib/endlessSave";
@@ -30,7 +31,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const hydrated = useHydrated();
   const [attempt, setAttempt] = useState(0);
   const [initial] = useState(() => (stageId === ENDLESS_ID ? loadEndless() : null));
-  const [run, setRun] = useState(() => initial?.run ?? createRun(stageId, progressStore.get().patchLevels));
+  const [run, setRun] = useState(() => initial?.run ?? createRun(stageId, progressStore.get().patchLevels, undefined, ownedItems(progressStore.get().consumables)));
   const [view, setView] = useState<View>(initial?.view ?? "fight");
   const [reward, setReward] = useState<StageReward | null>(null);
   const [endlessResult, setEndlessResult] = useState<EndlessResult | null>(null);
@@ -57,7 +58,7 @@ export function PlayScreen({ stageId }: { stageId: number }) {
   const restart = useCallback(() => {
     if (run.stage.endless) clearEndless();
     setAttempt((a) => a + 1);
-    setRun(createRun(stageId, progressStore.get().patchLevels));
+    setRun(createRun(stageId, progressStore.get().patchLevels, undefined, ownedItems(progressStore.get().consumables)));
     setReward(null);
     setEndlessResult(null);
     setView("fight");

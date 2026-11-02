@@ -1,6 +1,8 @@
 import { ENDLESS_ID } from "@/data/stages";
+import type { ItemId } from "@/game/items";
 import type { PacketKindId } from "@/game/kinds";
 import type { PatchId } from "@/game/patches";
+import { ownedItems } from "@/game/items";
 import { createRun, randomSeed, type RunState } from "@/game/runState";
 import { createRng } from "@/game/random";
 import { progressStore } from "./progress";
@@ -17,6 +19,11 @@ type EndlessSave = {
   maxUptime: number;
   patches: PatchId[];
   killSwitchSpent: number;
+  items?: ItemId[];
+  itemsUsed?: ItemId[];
+  shields?: number;
+  dataBoost?: boolean;
+  reviveArmed?: boolean;
   dataEarned: number;
   dropped: number;
   breaches: PacketKindId[];
@@ -33,6 +40,11 @@ export function saveEndless(run: RunState, view: EndlessView) {
     maxUptime: run.maxUptime,
     patches: [...run.patches],
     killSwitchSpent: run.killSwitchSpent,
+    items: [...run.items],
+    itemsUsed: [...run.itemsUsed],
+    shields: run.shields,
+    dataBoost: run.dataBoost,
+    reviveArmed: run.reviveArmed,
     dataEarned: run.dataEarned,
     dropped: run.dropped,
     breaches: [...run.breaches],
@@ -64,13 +76,18 @@ export function savedEndlessWave(): number | null {
 export function loadEndless(): { run: RunState; view: EndlessView } | null {
   const save = readSave();
   if (!save) return null;
-  const run = createRun(ENDLESS_ID, progressStore.get().patchLevels);
+  const run = createRun(ENDLESS_ID, progressStore.get().patchLevels, undefined, ownedItems(progressStore.get().consumables));
   run.wave = save.wave;
   run.score = save.score;
   run.uptime = save.uptime;
   run.maxUptime = save.maxUptime;
   run.patches = [...save.patches];
   run.killSwitchSpent = save.killSwitchSpent;
+  run.items = [...(save.items ?? run.items)];
+  run.itemsUsed = [...(save.itemsUsed ?? [])];
+  run.shields = save.shields ?? 0;
+  run.dataBoost = save.dataBoost ?? false;
+  run.reviveArmed = save.reviveArmed ?? false;
   run.dataEarned = save.dataEarned;
   run.dropped = save.dropped;
   run.breaches = [...save.breaches];

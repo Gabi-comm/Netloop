@@ -153,6 +153,7 @@ export class PlayfieldRenderer {
     if (sinceHit < SERVER_HIT_MS) this.serverHit(ctx, serverAnim, sinceHit, server, 96 * s, s);
     else if (sinceHappy < SERVER_JUMP_MS) this.serverJump(ctx, serverAnim, now, sinceHappy, server, 96 * s, s);
     else this.sprite(ctx, serverAnim, now, { x: server.x, y: server.y }, 96 * s);
+    if (engine.shields > 0) this.shieldRing(ctx, server, 64 * s, engine.shields, now, s);
     const bitAnim = hurt ? this.skin.anims.hurt : engine.drawing ? this.skin.anims.draw : this.skin.anims.idle;
     this.sprite(ctx, bitAnim, hurt ? now - engine.serverHurtAtMs : now, { x: server.x - 92 * s, y: server.y + 22 * s }, 64 * s);
 
@@ -281,6 +282,24 @@ export class PlayfieldRenderer {
     ctx.ellipse(cx, top + 2 * s, 34 * s, 8 * s, 0, 0, Math.PI * 2);
     ctx.ellipse(cx - 92 * s, top + 4 * s, 22 * s, 6 * s, 0, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  private shieldRing(ctx: CanvasRenderingContext2D, at: Vec, radius: number, count: number, now: number, s: number) {
+    const arc = (Math.PI * 2) / Math.max(3, count) - 0.45;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.shadowColor = "#5fd3e0";
+    ctx.shadowBlur = 12 * s;
+    ctx.strokeStyle = "#5fd3e0";
+    ctx.lineWidth = 6 * s;
+    const spin = now / 1800;
+    for (let i = 0; i < count; i++) {
+      const start = spin + (i * Math.PI * 2) / count;
+      ctx.beginPath();
+      ctx.arc(at.x, at.y, radius, start, start + arc);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private hpPips(ctx: CanvasRenderingContext2D, at: Vec, size: number, hp: number, max: number, s: number) {

@@ -1,4 +1,5 @@
 import { endlessWave, getStage, stageThreats, WAVES_PER_STAGE, type Stage, type WaveDef } from "@/data/stages";
+import type { ItemId } from "./items";
 import type { PacketKindId } from "./kinds";
 import { patchValue, type PatchId } from "./patches";
 import { createRng, type Rng } from "./random";
@@ -13,6 +14,11 @@ export type RunState = {
   patches: PatchId[];
   levels: Partial<Record<PatchId, number>>;
   killSwitchSpent: number;
+  items: ItemId[];
+  itemsUsed: ItemId[];
+  shields: number;
+  dataBoost: boolean;
+  reviveArmed: boolean;
   dataEarned: number;
   dropped: number;
   breaches: PacketKindId[];
@@ -47,7 +53,7 @@ export function currentWave(run: RunState): WaveDef {
   return run.stage.endless ? endlessWave(run.wave) : run.waves[run.wave - 1];
 }
 
-export function createRun(stageId: number, levels: Partial<Record<PatchId, number>> = {}, seed = randomSeed()): RunState {
+export function createRun(stageId: number, levels: Partial<Record<PatchId, number>> = {}, seed = randomSeed(), items: ItemId[] = []): RunState {
   const stage = getStage(stageId);
   if (!stage) throw new Error(`unknown stage ${stageId}`);
   const rng = createRng(seed);
@@ -61,6 +67,11 @@ export function createRun(stageId: number, levels: Partial<Record<PatchId, numbe
     patches: [],
     levels: { ...levels },
     killSwitchSpent: 0,
+    items: [...items],
+    itemsUsed: [],
+    shields: 0,
+    dataBoost: false,
+    reviveArmed: false,
     dataEarned: 0,
     dropped: 0,
     breaches: [],
@@ -102,7 +113,7 @@ export function starsFor(run: RunState): number {
 }
 
 export function dataMultiplier(run: RunState): number {
-  return 1 + patchPower(run, "dataMiner") / 100;
+  return 1 + patchPower(run, "dataMiner") / 100 + (run.dataBoost ? 0.5 : 0);
 }
 
 export function packetData(run: RunState): number {

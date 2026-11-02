@@ -4,6 +4,7 @@ import { centroid, distance, minDistance, pathLength, pointInPolygon, type Vec }
 import { PacketKinds, type PacketKind, type PacketKindId } from "./kinds";
 import { buildCables, Layouts, type Cable, type NetworkLayout } from "./network";
 import { POP_MS, type Pop } from "./pops";
+import { Items, ZERO_TRUST_SHIELDS, type ItemId } from "./items";
 import { honeypotCooldownS, patchValue } from "./patches";
 import { currentWave, hasPatch, killSwitchCharges, patchLevel, patchPower, type RunState } from "./runState";
 import { durationMs, Sprites, type SpriteAnim } from "./sprites";
@@ -45,6 +46,11 @@ export type Hud = {
   honeypotReady: boolean;
   honeypotCooldown: number;
   briefing: PacketKindId | null;
+  items: ItemId[];
+  itemsUsed: ItemId[];
+  itemsActive: ItemId[];
+  shields: number;
+  reviveArmed: boolean;
 };
 
 const TROJAN_OPEN_AT = 0.72;
@@ -82,6 +88,10 @@ export class GameEngine {
   private nextId = 0;
   private vpnCharge: number;
   private freezeUntilMs = 0;
+  private throttleUntilMs = 0;
+  private overdriveUntilMs = 0;
+  private wideNetUntilMs = 0;
+  private surgeUntilMs = 0;
   private honeypotReadyAtMs = 0;
   private readonly known: Set<PacketKindId>;
   private readonly introduces: Set<PacketKindId>;
@@ -106,7 +116,7 @@ export class GameEngine {
   }
 
   get snapRadius(): number {
-    return 30 * this.scale * (1 + patchPower(this.run, "wideSnap") / 100);
+    return 30 * this.scale * (1 + patchPower(this.run, "wideSnap") / 100) * (this.clockMs < this.wideNetUntilMs ? 2 : 1);
   }
 
   private get honeypotCooldownMs(): number {
@@ -115,6 +125,27 @@ export class GameEngine {
 
   get isFrozen(): boolean {
     return this.clockMs < this.freezeUntilMs;
+  }
+
+  get shields(): number {
+    return this.run.shields;
+  }
+
+  private get surge(): number {
+    return this.clockMs < this.surgeUntilMs ? 2 : 1;
+  }
+
+  private activeItems(): ItemId[] {
+    const active: ItemId[] = [];
+    if (this.clockMs < this.freezeUntilMs && this.run.itemsUsed.includes("packetFreeze")) active.push("packetFreeze");
+    if (this.clockMs < this.throttleUntilMs) active.push("throttle");
+    if (this.clockMs < this.overdriveUntilMs) active.push("overdrive");
+    if (this.clockMs < this.wideNetUntilMs) active.push("wideNet");
+    if (this.clockMs < this.surgeUntilMs) active.push("scoreSurge");
+    if (this.run.shields > 0) active.push("zeroTrust");
+    if (this.run.reviveArmed) active.push("reboot");
+    if (this.run.dataBoost) active.push("dataSiphon");
+    return active;
   }
 
   get serverPosition(): Vec {
@@ -163,6 +194,11 @@ export class GameEngine {
       honeypotReady: honeypotOwned && this.clockMs >= this.honeypotReadyAtMs,
       honeypotCooldown: honeypotOwned ? Math.max(0, (this.honeypotReadyAtMs - this.clockMs) / this.honeypotCooldownMs) : 0,
       briefing: this.briefings[0] ?? null,
+      items: this.run.items,
+      itemsUsed: this.run.itemsUsed,
+      itemsActive: this.activeItems(),
+      shields: this.run.shields,
+      reviveArmed: this.run.reviveArmed,
     };
   }
 
@@ -172,6 +208,7 @@ export class GameEngine {
     const key = [
       hud.phase, hud.score, hud.combo, hud.uptime, Math.round(hud.bandwidth * 40), hud.drawing, Math.round(hud.waveProgress * 20), hud.threatsLeft,
       hud.killSwitchCharges, hud.honeypotReady, Math.round(hud.honeypotCooldown * 20), hud.briefing,
+      hud.itemsUsed.join(","), hud.itemsActive.join(","), hud.shields, hud.reviveArmed,
     ].join("|");
     if (key === this.lastHudKey) return;
     this.lastHudKey = key;
@@ -214,7 +251,7 @@ export class GameEngine {
       return;
     }
 
-    const slow = this.drawing ? 1 - patchPower(this.run, "rateLimiter") / 100 : 1;
+    const slow = (this.drawing ? 1 - patchPower(this.run, "rateLimiter") / 100 : 1) * (this.clockMs < this.throttleUntilMs ? 0.5 : 1);
     const frozen = this.isFrozen;
     const opened: Packet[] = [];
 
@@ -310,7 +347,7 @@ export class GameEngine {
     if (!this.drawing) return;
     const step = distance(at, this.line[this.line.length - 1]);
     if (step < 4 * this.scale) return;
-    this.bandwidth -= step / this.inkMax;
+    if (this.clockMs >= this.overdriveUntilMs) this.bandwidth -= step / this.inkMax;
     if (this.bandwidth <= 0) {
       this.bandwidth = 0;
       this.breakLine(at, "out of bandwidth");
@@ -340,6 +377,69 @@ export class GameEngine {
     this.sfx("killSwitch");
     this.popups.push({ text: "KILL SWITCH", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: NetColors.threat, big: true });
     this.emitHud();
+  }
+
+  useItem(id: ItemId): boolean {
+    if (this.phase !== "playing") return false;
+    if (!this.run.items.includes(id) || this.run.itemsUsed.includes(id)) return false;
+    const item = Items[id];
+    const center = { x: this.width / 2, y: this.height * 0.45 };
+    const ms = (item.durationS ?? 0) * 1000;
+    switch (id) {
+      case "zeroTrust":
+        this.run.shields += ZERO_TRUST_SHIELDS;
+        this.sfx("install");
+        break;
+      case "repairKit":
+        if (this.uptime >= this.run.maxUptime) {
+          this.popups.push({ text: "uptime is full", at: center, startMs: this.clockMs, color: NetColors.muted });
+          return false;
+        }
+        this.uptime += 1;
+        this.serverHappyAtMs = this.clockMs;
+        this.sfx("unlock");
+        break;
+      case "packetFreeze":
+        this.freezeUntilMs = Math.max(this.freezeUntilMs, this.clockMs + ms);
+        this.sfx("honeypot");
+        break;
+      case "throttle":
+        this.throttleUntilMs = this.clockMs + ms;
+        this.sfx("whoosh");
+        break;
+      case "overdrive":
+        this.overdriveUntilMs = this.clockMs + ms;
+        this.bandwidth = 1;
+        this.sfx("upgrade", 2);
+        break;
+      case "wideNet":
+        this.wideNetUntilMs = this.clockMs + ms;
+        this.sfx("pick");
+        break;
+      case "scoreSurge":
+        this.surgeUntilMs = this.clockMs + ms;
+        this.sfx("star");
+        break;
+      case "dataSiphon":
+        this.run.dataBoost = true;
+        this.sfx("buy");
+        break;
+      case "purge": {
+        const threats = this.packets.filter((p) => p.kind.isThreat);
+        for (const p of threats) this.drop(p, 1);
+        this.removeAll(threats);
+        this.sfx("killSwitch");
+        break;
+      }
+      case "reboot":
+        this.run.reviveArmed = true;
+        this.sfx("install");
+        break;
+    }
+    this.run.itemsUsed.push(id);
+    this.popups.push({ text: item.title.toUpperCase(), at: center, startMs: this.clockMs, color: item.color, big: true });
+    this.emitHud();
+    return true;
   }
 
   useHoneypot() {
@@ -381,6 +481,13 @@ export class GameEngine {
   private reachServer(p: Packet) {
     if (p.kind.isThreat) {
       this.resolvedThreats++;
+      if (this.run.shields > 0) {
+        this.run.shields--;
+        this.serverHappyAtMs = this.clockMs;
+        this.popups.push({ text: this.run.shields > 0 ? `shield blocked! ${this.run.shields} left` : "last shield blocked!", at: this.serverPosition, startMs: this.clockMs, color: Items.zeroTrust.color });
+        this.sfx("vpn");
+        return;
+      }
       if (this.run.rng.next() * 100 < patchPower(this.run, "backupServer")) {
         this.serverHappyAtMs = this.clockMs;
         this.popups.push({ text: "backup held", at: this.serverPosition, startMs: this.clockMs, color: NetColors.rare });
@@ -394,7 +501,13 @@ export class GameEngine {
       this.popups.push({ text: "-1 uptime", at: this.serverPosition, startMs: this.clockMs, color: NetColors.threat });
       this.sfx("breach");
       this.sfx("hurt");
-      if (this.uptime <= 0) {
+      if (this.uptime <= 0 && this.run.reviveArmed) {
+        this.run.reviveArmed = false;
+        this.uptime = Math.min(this.run.maxUptime, 2);
+        this.serverHappyAtMs = this.clockMs;
+        this.popups.push({ text: "REBOOT!", at: { x: this.width / 2, y: this.height * 0.45 }, startMs: this.clockMs, color: Items.reboot.color, big: true });
+        this.sfx("upgrade", 3);
+      } else if (this.uptime <= 0) {
         this.uptime = 0;
         this.phase = "lost";
         this.sfx("lost");
@@ -403,10 +516,10 @@ export class GameEngine {
         this.emitHud();
       }
     } else {
-      this.score += p.kind.points;
+      this.score += p.kind.points * this.surge;
       this.run.dataEarned += 1;
       this.serverHappyAtMs = this.clockMs;
-      this.popups.push({ text: `+${p.kind.points}`, at: this.serverPosition, startMs: this.clockMs, color: NetColors.legit });
+      this.popups.push({ text: `+${p.kind.points * this.surge}`, at: this.serverPosition, startMs: this.clockMs, color: NetColors.legit });
       this.sfx("deliver");
     }
   }
@@ -484,7 +597,7 @@ export class GameEngine {
   }
 
   private drop(p: Packet, multiplier: number) {
-    const gain = p.kind.points * multiplier;
+    const gain = p.kind.points * multiplier * this.surge;
     this.score += gain;
     this.resolvedThreats++;
     this.run.dropped++;
