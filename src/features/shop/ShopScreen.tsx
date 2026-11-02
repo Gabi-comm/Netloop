@@ -5,7 +5,7 @@ import { CheckIcon, DataIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { DataPill, Screen, TopBar } from "@/components/ui";
 import { patchItemKey, patchTag, RarityStyle, ShopPatches, type Patch } from "@/game/patches";
-import { ownsSkin, skinById, skinItemKey, SkinList, type Skin } from "@/game/skins";
+import { ownsSkin, skinById, skinItemKey, SkinList, teleportCue, type Skin } from "@/game/skins";
 import { progressStore, useHydrated, useProgress } from "@/lib/progress";
 import { playSfx } from "@/lib/sfx";
 import { LinePreview } from "./LinePreview";
@@ -71,7 +71,14 @@ function SkinCard({
     <li className={`${styles.card} ${styles.skinCard} ${equipped ? styles.equipped : ""}`}>
       <div className={styles.skinTop}>
         <div className={styles.icon}>
-          <Sprite anim={skin.anims.idle} size={72} />
+          <Sprite
+            anim={skin.anims.idle}
+            size={72}
+            onFrame={(f) => {
+              const cue = teleportCue(skin, f, true);
+              if (cue !== null) playSfx("glitch", cue);
+            }}
+          />
         </div>
         <div className={styles.text}>
           <span className={styles.tag} style={{ color: skin.accent }}>{skin.price === 0 ? "DEFAULT" : "SKIN"}</span>

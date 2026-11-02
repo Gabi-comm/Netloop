@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CloudIcon, CodexIcon, GearIcon, PlayIcon, ShopIcon, ZonesIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
-import { ChunkyButton, DataPill, IconButton, Screen, Sheet, Toggle } from "@/components/ui";
+import { AudioSettings } from "@/components/AudioSettings";
+import { ChunkyButton, DataPill, IconButton, Screen, Sheet } from "@/components/ui";
 import { getStage, Stages } from "@/data/stages";
-import { skinById } from "@/game/skins";
+import { skinById, teleportCue } from "@/game/skins";
 import { savedEndlessWave } from "@/lib/endlessSave";
 import { clearedCount, nextStageId, progressStore, useHydrated, useProgress } from "@/lib/progress";
-import { setMusicEnabled, setMusicVolume, useMusicEnabled, useMusicVolume } from "@/lib/music";
-import { playSfx, setSoundEnabled, setSoundVolume, useSoundEnabled, useSoundVolume } from "@/lib/sfx";
+import { playSfx } from "@/lib/sfx";
 import { HeroScene } from "./HeroScene";
 import { Intro } from "./Intro";
 import styles from "./home.module.css";
@@ -50,43 +50,11 @@ function HomeBackdrop() {
   );
 }
 
-function VolumeRow({
-  value, enabled, label, onChange, onRelease,
-}: { value: number; enabled: boolean; label: string; onChange: (v: number) => void; onRelease?: () => void }) {
-  const percent = Math.round(value * 100);
-  return (
-    <div className={`${styles.settingsRow} ${enabled ? "" : styles.settingsRowOff}`}>
-      <span className={styles.settingsSub}>volume</span>
-      <div className={styles.volume}>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={5}
-          value={percent}
-          disabled={!enabled}
-          aria-label={label}
-          className={styles.volumeSlider}
-          style={{ "--fill": `${percent}%` } as CSSProperties}
-          onChange={(e) => onChange(Number(e.target.value) / 100)}
-          onPointerUp={onRelease}
-          onKeyUp={onRelease}
-        />
-        <span className={styles.volumeValue}>{percent}%</span>
-      </div>
-    </div>
-  );
-}
-
 export function HomeScreen() {
   const progress = useProgress();
   const hydrated = useHydrated();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [endlessWave, setEndlessWave] = useState<number | null>(null);
-  const sound = useSoundEnabled();
-  const volume = useSoundVolume();
-  const musicOn = useMusicEnabled();
-  const musicLevel = useMusicVolume();
   const skin = skinById(hydrated ? progress.equippedSkin : undefined);
 
   useEffect(() => setEndlessWave(savedEndlessWave()), []);
@@ -117,7 +85,14 @@ export function HomeScreen() {
           <span className={styles.net}>NET</span>LOOP
         </h1>
         <div className={styles.bannerBit}>
-          <Sprite anim={skin.anims.idle} size={64} />
+          <Sprite
+            anim={skin.anims.idle}
+            size={64}
+            onFrame={(f) => {
+              const cue = teleportCue(skin, f, true);
+              if (cue !== null) playSfx("glitch", cue);
+            }}
+          />
         </div>
       </div>
 
@@ -181,16 +156,7 @@ export function HomeScreen() {
 
       <Sheet open={settingsOpen} onClose={() => setSettingsOpen(false)} label="Settings">
         <h2 className={styles.sheetTitle}>SETTINGS</h2>
-        <div className={styles.settingsRow}>
-          <span>sound effects</span>
-          <Toggle on={sound} onChange={setSoundEnabled} label="Sound effects" />
-        </div>
-        <VolumeRow value={volume} enabled={sound} label="Sound effects volume" onChange={setSoundVolume} onRelease={() => playSfx("pick", 1)} />
-        <div className={styles.settingsRow}>
-          <span>music</span>
-          <Toggle on={musicOn} onChange={setMusicEnabled} label="Background music" />
-        </div>
-        <VolumeRow value={musicLevel} enabled={musicOn} label="Music volume" onChange={setMusicVolume} />
+        <AudioSettings />
         <ChunkyButton
           tone="ghost"
           size="small"

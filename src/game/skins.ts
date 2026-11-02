@@ -23,6 +23,7 @@ export type Skin = {
   line: LineStyle;
   accent: string;
   anims: SkinAnims;
+  teleport?: { out: number; back: number };
 };
 
 function animsFor(id: SkinId): SkinAnims {
@@ -71,9 +72,17 @@ export const Skins: Record<SkinId, Skin> = {
     id: "glitch", title: "Glitch Bit", price: 1000, lineName: "corrupted signal",
     blurb: "something went wrong in his code. he glitches out and teleports around. draws a broken, flickering signal",
     line: { kind: "glitch", color: "#5fd3e0", edge: "#e0567f", alt: "#8ad15b" },
-    accent: "#5fd3e0", anims: animsFor("glitch"),
+    accent: "#5fd3e0", anims: animsFor("glitch"), teleport: { out: 15, back: 19 },
   },
 };
+
+export function teleportCue(skin: Skin, frame: number, soft = false): number | null {
+  if (!skin.teleport) return null;
+  const quiet = soft ? 2 : 0;
+  if (frame === skin.teleport.out) return quiet;
+  if (frame === skin.teleport.back) return quiet + 1;
+  return null;
+}
 
 export const SkinList: Skin[] = Object.values(Skins);
 

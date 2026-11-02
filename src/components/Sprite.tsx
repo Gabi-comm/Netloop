@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { spriteUrl, type SpriteAnim } from "@/game/sprites";
 
 type SpriteProps = {
@@ -9,10 +9,13 @@ type SpriteProps = {
   label?: string;
   playing?: boolean;
   className?: string;
+  onFrame?: (frame: number) => void;
 };
 
-export function Sprite({ anim, size, label, playing = true, className }: SpriteProps) {
+export function Sprite({ anim, size, label, playing = true, className, onFrame }: SpriteProps) {
   const [frame, setFrame] = useState(0);
+  const frameListener = useRef(onFrame);
+  frameListener.current = onFrame;
 
   useEffect(() => {
     if (!playing || anim.frames <= 1 || anim.frameMs <= 0) return;
@@ -20,6 +23,7 @@ export function Sprite({ anim, size, label, playing = true, className }: SpriteP
     const id = window.setInterval(() => {
       index = anim.loop ? (index + 1) % anim.frames : Math.min(index + 1, anim.frames - 1);
       setFrame(index);
+      frameListener.current?.(index);
     }, anim.frameMs);
     return () => window.clearInterval(id);
   }, [anim, playing]);

@@ -76,7 +76,7 @@ const table: [SpriteName, number, number, boolean][] = [
 ];
 
 const SkinFrames: Partial<Record<SkinSpriteId, [number, number][]>> = {
-  glitch: [[8, 120], [4, 100], [3, 110]],
+  glitch: [[20, 150], [4, 100], [3, 110]],
 };
 
 const skinTable: [SpriteName, number, number, boolean][] = SkinIds.flatMap((id) => {

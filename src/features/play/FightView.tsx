@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { HoneypotIcon, PowerIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
-import { ChunkyButton, UptimeBars } from "@/components/ui";
+import { AudioSettings, settingsStyles } from "@/components/AudioSettings";
+import { ChunkyButton, Sheet, UptimeBars } from "@/components/ui";
 import { GameEngine, type Hud } from "@/game/engine";
 import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import { currentWave, type RunState } from "@/game/runState";
-import { skinById } from "@/game/skins";
+import { skinById, teleportCue } from "@/game/skins";
+import { frameAt } from "@/game/sprites";
 import { progressStore } from "@/lib/progress";
 import { music } from "@/lib/music";
 import { playSfx, unlockAudio } from "@/lib/sfx";
@@ -38,6 +40,9 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   const [bestScore] = useState(() => progressStore.get().endless.bestScore);
   const [hud, setHud] = useState<Hud>(() => engine.hud());
   const [comboBump, setComboBump] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpenRef = useRef(false);
+  settingsOpenRef.current = settingsOpen;
   const lastCombo = useRef(hud.combo);
   const callbacks = useRef({ onCleared, onLost });
   callbacks.current = { onCleared, onLost };
@@ -77,11 +82,21 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
     let raf = 0;
     let last = performance.now();
+    let lastBitFrame = -1;
     const tick = (now: number) => {
       const dt = Math.min(50, now - last);
       last = now;
       engine.update(dt);
       renderer.draw(ctx, engine);
+      if (skin.teleport) {
+        const calm = !engine.drawing && engine.clockMs - engine.serverHurtAtMs >= 260 && engine.phase === "playing";
+        const frame = calm ? frameAt(skin.anims.idle, engine.clockMs) : -1;
+        if (frame !== lastBitFrame) {
+          const cue = teleportCue(skin, frame);
+          if (cue !== null) playSfx("glitch", cue);
+          lastBitFrame = frame;
+        }
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -89,7 +104,7 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
     const onVisibility = () => document.hidden && engine.pause();
     document.addEventListener("visibilitychange", onVisibility);
     const onKey = (e: KeyboardEvent) => {
-      if (engine.phase === "briefing") return;
+      if (engine.phase === "briefing" || settingsOpenRef.current) return;
       if (e.key === "Escape" || e.key === "p") engine.phase === "paused" ? engine.resume() : engine.pause();
     };
     window.addEventListener("keydown", onKey);
@@ -112,6 +127,10 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
       const t = window.setTimeout(() => callbacks.current.onLost(), 900);
       return () => window.clearTimeout(t);
     }
+  }, [hud.phase]);
+
+  useEffect(() => {
+    if (hud.phase !== "paused") setSettingsOpen(false);
   }, [hud.phase]);
 
   useEffect(() => {
@@ -301,6 +320,14 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
         <EnemyBriefing kindId={hud.briefing} onDismiss={() => engine.dismissBriefing()} />
       )}
 
+      <Sheet open={settingsOpen && hud.phase === "paused"} onClose={() => setSettingsOpen(false)} label="Settings">
+        <h2 className={settingsStyles.title}>SETTINGS</h2>
+        <AudioSettings />
+        <ChunkyButton tone="pink" size="small" onClick={() => setSettingsOpen(false)}>
+          DONE
+        </ChunkyButton>
+      </Sheet>
+
       {hud.phase === "paused" && (
         <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Paused">
           <h2 className={styles.overlayTitle}>PAUSED</h2>
@@ -308,6 +335,9 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
             {endless ? `the cloud · wave ${run.wave}` : `${where} · wave ${run.wave} of ${run.maxWaves}`}
           </p>
           <ChunkyButton onClick={() => engine.resume()}>RESUME</ChunkyButton>
+          <ChunkyButton tone="ghost" size="small" onClick={() => setSettingsOpen(true)}>
+            settings
+          </ChunkyButton>
           <ChunkyButton tone="ghost" size="small" onClick={onRestart}>
             {endless ? "restart run" : "restart zone"}
           </ChunkyButton>

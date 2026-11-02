@@ -39,7 +39,8 @@ export type SfxName =
   | "shop"
   | "wave"
   | "settings"
-  | "hurt";
+  | "hurt"
+  | "glitch";
 
 const KEY = "netloop.sound.v1";
 const VOLUME_KEY = "netloop.volume.v1";
@@ -494,6 +495,15 @@ const Sounds: Record<SfxName, (ac: AudioContext, level: number) => void> = {
   hurt: (ac) => {
     yelp(ac, 0.05, 560, 900, 360, 0.3, 0.5);
     pluck(ac, { freq: N.B3, at: 0.05, bend: 0.7, dur: 0.18, vol: 0.08, type: "square", bright: 900, send: 0.2 });
+  },
+  glitch: (ac, cue) => {
+    const back = cue % 2 === 1;
+    const k = cue >= 2 ? 0.45 : 1;
+    const blips = back ? [1900, 700, 2600] : [1200, 2900, 500, 2200, 1500];
+    blips.forEach((f, i) => pluck(ac, { freq: f, at: i * 0.022, dur: 0.03, vol: 0.09 * k, type: "square", bright: 6000, send: 0.1 }));
+    [0, 0.045, 0.08].forEach((at) => noise(ac, { at, dur: 0.025, vol: 0.12 * k, freq: 3400, q: 2.5, send: 0.1 }));
+    pluck(ac, { freq: back ? 220 : 1800, bend: back ? 7 : 0.12, at: back ? 0 : 0.09, dur: 0.16, vol: 0.14 * k, type: "sine", bright: 5000, send: 0.4 });
+    if (back) bell(ac, N.E5 * 2, 0.12, 0.25, 0.04 * k);
   },
   briefing: (ac) => [N.E4, N.A4, N.Cs5].forEach((f, i) => pluck(ac, { freq: f, at: i * 0.08, dur: 0.24, vol: 0.14 })),
 };
