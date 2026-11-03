@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { HoneypotIcon, PowerIcon } from "@/components/Icons";
 import { Sprite } from "@/components/Sprite";
 import { AudioSettings, settingsStyles } from "@/components/AudioSettings";
 import { ChunkyButton, Sheet, UptimeBars } from "@/components/ui";
 import { GameEngine, type Hud } from "@/game/engine";
+import { Items, type ItemId } from "@/game/items";
 import { PacketKinds } from "@/game/kinds";
 import { PlayfieldRenderer, SpriteCache } from "@/game/renderer";
 import { currentWave, type RunState } from "@/game/runState";
@@ -44,6 +45,9 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
   const settingsOpenRef = useRef(false);
   settingsOpenRef.current = settingsOpen;
   const lastCombo = useRef(hud.combo);
+  const useItem = (id: ItemId) => {
+    if (engine.useItem(id)) progressStore.useConsumable(id);
+  };
   const callbacks = useRef({ onCleared, onLost });
   callbacks.current = { onCleared, onLost };
 
@@ -246,6 +250,38 @@ export function FightView({ run, sprites, onCleared, onLost, onRestart, onQuit }
 
         <PatchStrip patches={run.patches} levels={run.levels} />
       </div>
+
+      {hud.items.length > 0 && (
+        <div className={styles.itemTray} role="group" aria-label="One-use items">
+          {hud.items.map((id) => {
+            const item = Items[id];
+            const used = hud.itemsUsed.includes(id);
+            const active = hud.itemsActive.includes(id);
+            const state = id === "zeroTrust" && hud.shields > 0 ? `${hud.shields} shields up` : active ? "active" : used ? "used" : "ready";
+            return (
+              <div key={id} className={styles.itemSlot}>
+                <button
+                  type="button"
+                  aria-label={`${item.title}, ${state}`}
+                  title={item.description}
+                  className={`${styles.itemButton} ${active ? styles.itemActive : ""}`}
+                  style={{ "--item": item.color } as CSSProperties}
+                  disabled={used || hud.phase !== "playing"}
+                  onClick={() => useItem(id)}
+                >
+                  <Sprite anim={item.icon} size={30} />
+                  {id === "zeroTrust" && hud.shields > 0 && (
+                    <span className={styles.abilityCount} style={{ background: item.color }} aria-hidden="true">×{hud.shields}</span>
+                  )}
+                </button>
+                <span className={styles.itemLabel} style={{ color: used && !active ? "var(--muted)" : item.color }}>
+                  {id === "reboot" && hud.reviveArmed ? "armed" : item.short}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {(hud.honeypotOwned || hud.killSwitchOwned) && (
         <div className={styles.abilities}>

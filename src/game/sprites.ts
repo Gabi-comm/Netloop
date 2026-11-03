@@ -16,6 +16,8 @@ export type SpriteName =
   | "patch_broadcast" | "patch_rate_limiter" | "patch_vpn_tunnel"
   | "patch_kill_switch" | "patch_kill_switch_used" | "patch_honeypot" | "patch_auto_patch"
   | "patch_overclock" | "patch_wide_snap" | "patch_data_miner" | "patch_backup_server"
+  | "item_zero_trust" | "item_repair_kit" | "item_packet_freeze" | "item_throttle" | "item_overdrive"
+  | "item_wide_net" | "item_score_surge" | "item_data_siphon" | "item_purge" | "item_reboot"
   | "env_cloud" | "env_grass" | "env_pebble"
   | BitSkinSpriteName;
 
@@ -70,6 +72,16 @@ const table: [SpriteName, number, number, boolean][] = [
   ["patch_wide_snap", 1, 0, false],
   ["patch_data_miner", 1, 0, false],
   ["patch_backup_server", 1, 0, false],
+  ["item_zero_trust", 1, 0, false],
+  ["item_repair_kit", 1, 0, false],
+  ["item_packet_freeze", 1, 0, false],
+  ["item_throttle", 1, 0, false],
+  ["item_overdrive", 1, 0, false],
+  ["item_wide_net", 1, 0, false],
+  ["item_score_surge", 1, 0, false],
+  ["item_data_siphon", 1, 0, false],
+  ["item_purge", 1, 0, false],
+  ["item_reboot", 1, 0, false],
   ["env_cloud", 1, 0, false],
   ["env_grass", 1, 0, false],
   ["env_pebble", 1, 0, false],
